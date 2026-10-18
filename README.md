@@ -35,6 +35,7 @@ Or as a Claude Code plugin:
 | [`rakerun-runs`](./skills/rakerun-runs) | Start, stream, turns, history, trace, messages, cancel, the event types |
 | [`rakerun-integrations`](./skills/rakerun-integrations) | Secrets and `network:`, MCP connectors, tokens, webhooks |
 | [`rakerun-knowledge`](./skills/rakerun-knowledge) | Structured Memory (`_schemas/`, `data:`, records) and `knowledge/` folders |
+| [`rakerun-onboarding`](./skills/rakerun-onboarding) | Set up an organization from sign-in to a first tested agent, with the console checklist |
 
 ## The house rules these skills teach
 

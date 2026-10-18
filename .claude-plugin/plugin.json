@@ -17,6 +17,7 @@
     "./skills/rakerun-agents",
     "./skills/rakerun-runs",
     "./skills/rakerun-integrations",
-    "./skills/rakerun-knowledge"
+    "./skills/rakerun-knowledge",
+    "./skills/rakerun-onboarding"
   ]
 }
