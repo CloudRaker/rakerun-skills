@@ -67,6 +67,8 @@ npx rakerun run start <agent> --branch onboarding --input "<a realistic example 
 
 A `402 insufficient_ai_credits` error means the AI wallet is empty: send the user to the console Billing page. Do not retry.
 
+A `403 run_access_required` error means the organization is on the CloudRaker Run waitlist. The agents stay saved and deployed. Do not retry. Ask the user for an access code and run `npx rakerun access redeem <code>`, then test again. Without a code, finish the other steps and tell the user that runs start when access opens. For faster access, they write to support@cloudraker.com.
+
 ## 6. Connect and finish
 
 Work through the open `tool:*` items:

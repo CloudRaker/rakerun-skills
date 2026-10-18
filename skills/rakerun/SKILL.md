@@ -27,6 +27,21 @@ Profiles: one per org host in `~/.config/rakerun/config.json`. `rakerun profile 
 
 Verify auth: `rakerun repo list` (any table means the token works). A `unauthorized` error means: run `rakerun login` again.
 
+## Early access and the waitlist
+
+CloudRaker Run is in early access. An organization without access is waitlisted. A waitlisted org can sign up, do the onboarding, create projects, import templates and deploy agents. It cannot run them: every run, turn and Builder session answers `403 run_access_required`. The CLI then prints the waitlist message, not the raw error.
+
+```bash
+rakerun access                         # granted or waitlisted, for the org of the profile
+rakerun access redeem RUN-ABCD-EFGH    # redeem an access code; runs open at once
+```
+
+- `rakerun start` checks the access after the first deploy. On a waitlisted org it prints the waitlist message and, on a terminal, asks once for an access code (Enter skips).
+- Do not retry a run that answers `run_access_required`. Tell the user that the agents are saved and deployed, and that runs start when the org has access.
+- Ask the user for an access code. Never guess one. A code looks like `RUN-XXXX-XXXX`; the CLI trims and uppercases it.
+- Redeem errors: the code is not valid, has expired, or has no uses left; too many attempts (wait one minute); or access could not be turned on (the code stays unused, try again later).
+- For faster access, the user writes to support@cloudraker.com or opens the chat in the console.
+
 ## The loop
 
 ```bash
@@ -56,5 +71,6 @@ rakerun run start linear-triage --input "Triage EGR-123" --stream
 - **Never write a secret value into the repo.** Write `${secret:NAME}` and `rakerun secret set NAME` (value prompted or on stdin). A push with a value fails with `secret_value`.
 - **Never edit a token.** `rakerun token create` shows the value once. Store it where the user asks, never in the repo.
 - **`--json` on every command** gives the raw API answer. Use it when you need ids.
+- **`run_access_required` (403)** means the org is on the waitlist. See [Early access and the waitlist](#early-access-and-the-waitlist).
 - **Exit codes:** 0 ok, 1 API or runtime error, 2 usage. The message names the API error code (`not_found`, `forbidden`, `invalid_body` with details).
 - The CLI never edits agent files. You do, in the repo, then `rakerun deploy`.
