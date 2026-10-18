@@ -1,0 +1,21 @@
+{
+  "name": "rakerun",
+  "version": "0.1.0",
+  "description": "Skills for cloudraker.run and its rakerun CLI: create projects from templates, write agents, deploy, run and stream, secrets and MCP connectors, Structured Memory and knowledge folders.",
+  "skills": "./skills",
+  "author": {
+    "name": "CloudRaker",
+    "url": "https://www.cloudraker.com"
+  },
+  "homepage": "https://docs.cloudraker.com/run",
+  "repository": "https://github.com/CloudRaker/rakerun-skills",
+  "license": "MIT",
+  "keywords": ["cloudraker", "rakerun", "agents", "deploy", "mcp", "cli"],
+  "interface": {
+    "displayName": "CloudRaker Run",
+    "shortDescription": "Deploy agents as APIs from a git repo.",
+    "developerName": "CloudRaker",
+    "category": "Productivity",
+    "websiteURL": "https://www.cloudraker.com"
+  }
+}

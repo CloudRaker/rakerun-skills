@@ -1,0 +1,16 @@
+{
+  "name": "cloudraker",
+  "interface": {
+    "displayName": "CloudRaker"
+  },
+  "plugins": [
+    {
+      "name": "rakerun",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
