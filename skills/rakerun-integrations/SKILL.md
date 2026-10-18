@@ -41,10 +41,13 @@ rakerun connector grant linear              # org-wide
 rakerun connector grant linear --repo agents --agent linear-triage
 rakerun connector revoke linear --repo agents
 rakerun connector disconnect linear
+rakerun connector tools linear              # the server tools, and which ones the connector allows
 rakerun connector rm linear
 ```
 
 Statuses: `connected`, `expired` (an admin logs in again with `connect`), `error`, `not_connected`. A run fails before the first model step with `connector_unavailable` when a name in `connectors:` does not exist, is not granted to the agent, or has no valid login. Check `rakerun connector list` first when a run fails that way.
+
+Each tool definition goes to the model on every step, so a large server (Linear, GitHub) costs many tokens. Keep only the tools the agent needs: `--tools` on the connector for the whole org, or a `tools:` list in agent.yml for one agent (`- name: linear` then `tools: [list_issues]`). An agent only narrows the connector list. A name the server lacks, or that the connector excludes, fails the run with `connector_unavailable`. `*` matches any characters. `mcp.json` servers take the same `tools` key.
 
 Writes, logins and grants need the admin role (a token with the `admin` scope). The OAuth login needs a browser: ask the user to run `rakerun connector connect <name>`.
 

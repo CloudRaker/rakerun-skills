@@ -81,6 +81,9 @@ network:                         # default deny; every host the agent reaches
     headers: { Authorization: '${secret:LINEAR_TOKEN}' }   # secrets are filled here, and only here
   '*.slack.com': {}                                        # a wildcard host cannot carry headers
 connectors: [linear]             # named MCP connectors of the org (see rakerun-integrations)
+# connectors:                    # or narrow the tools of one connector (fewer tokens per step)
+#   - name: linear
+#     tools: [list_issues, get_*]  # server tool names; * matches any characters
 secrets:                         # declare every name you reference, else secret_undeclared
   LINEAR_TOKEN: { overridable: true }   # a run request may send a value for one turn
   HOOK_SECRET: {}
@@ -123,7 +126,7 @@ A script name cannot collide with a built-in tool or the prefixes `data_`, `file
 1. `rakerun lint` is clean.
 2. Every `${secret:NAME}` is declared under `secrets:` and set: `rakerun secret list`, `rakerun secret set NAME`.
 3. Every host the agent calls is under `network:` (or comes from `_apis`, `mcp.json`, a connector).
-4. Every name in `connectors:` exists, is granted and is `connected`: `rakerun connector list`.
+4. Every name in `connectors:` exists, is granted and is `connected`: `rakerun connector list`. Every name in a `tools:` list is a server tool that the connector allows: `rakerun connector tools <name>`. A wrong name fails the run with `connector_unavailable`.
 5. `mode: turns` when the agent must ask questions; `zeroshot` otherwise.
 6. After the deploy: `rakerun agent show <agent>` prints the resolved config, the tool list, the missing secrets and the deployments.
 
