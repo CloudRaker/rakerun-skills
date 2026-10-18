@@ -14,11 +14,11 @@ The console has an onboarding checklist per organization. You drive the same che
 ## 1. Sign in
 
 ```bash
-npx rakerun login --org <slug>      # opens the browser; the user approves the code
-npx rakerun login --org <slug> --paste   # you run in the cloud: the user pastes back one line
+npx rakerun login --org <slug>      # on the user's computer: opens the browser; the user approves the code
+npx rakerun login --base-url https://<host> --token '<org> crr_...'   # in the cloud: the line the user copied from the /cli page
 ```
 
-Tell the user the code from your output and ask them to click Connect when the page shows it. Never print the token and never ask the user to paste a secret into the chat.
+On the user's computer, tell the user the code from your output and ask them to click Connect when the page shows it. In the cloud (a sandbox, a container), never run `login` without `--token`: it cannot finish and the CLI exits with the page to open. Ask the user to open `<console_url>/cli`, click **Create CLI token** and paste the line here, then log in with `--token`. Never print the token back and never write it to a file. See the sign-in section of the `rakerun` skill.
 
 ## 2. Read the state and the rules
 

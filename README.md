@@ -10,7 +10,7 @@ rakerun start               # sign up, create the org, a project from templates,
 rakerun login --org acme    # an existing org
 ```
 
-`rakerun login` opens the browser. You approve the connection on the console page (it shows the same code as the terminal) and the token comes back to the terminal on its own. Use `--paste` on a remote shell, or `--token -` to read a token from stdin in CI.
+`rakerun login` opens the browser. You approve the connection on the console page (it shows the same code as the terminal) and the token comes back to the terminal on its own. Use `--paste` on a remote shell, or `--token -` to read a token from stdin in CI. An agent in a sandbox asks you for the line the `/cli` page shows and passes it as `--token '<org> crr_...'`.
 
 ## Install the skills
 

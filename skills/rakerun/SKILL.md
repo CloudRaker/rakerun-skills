@@ -21,7 +21,17 @@ rakerun start                   # no org yet: sign-up, org, token, first project
 rakerun whoami
 ```
 
-`login` and `start` open the browser and wait on a loopback port. The console page shows the org, the port and a code; the terminal prints the same code. The user approves on the page. When you run on the user's computer, run the command yourself: the tab opens on their screen, you read the code from your output and tell them "click Connect when the page shows <code>". `rakerun start --name <project> --templates <id,id>` answers the prompts, so no terminal input is needed. When you run elsewhere (a cloud agent), add `--paste`: the user opens the link and pastes back the line the page shows. On a remote shell, `--paste` shows one line on the page to paste. In CI, `rakerun login --base-url https://acme.cloudraker.run --token -` reads a `crr_` token from stdin; create one with `rakerun token create ci --scopes run,read` or in the console **Tokens** screen.
+`login` and `start` need a sign-in in the browser. Pick the path by where you run:
+
+**On the user's computer** (a terminal, a local agent): run `rakerun login --org <slug>` yourself. It opens the console in a tab and waits on a loopback port. Your output shows a code. Tell the user: "click Connect when the page shows <code>". `rakerun start --name <project> --templates <id,id>` answers the prompts, so no terminal input is needed.
+
+**Not on the user's computer** (a cloud agent, a sandbox, a container, CI): the browser cannot reach your loopback port and nobody can type at your prompt. Never run `login` or `start` without `--token` there: the command would wait. The CLI detects the missing terminal, prints the page to open and exits with code 2. Do this instead, in three steps:
+
+1. Give the user the page and the steps. The page is `<console_url>/cli`; `rakerun login --base-url https://<host>` prints it (exit 2, no wait). Tell them: "Open <console_url>/cli, sign in, click **Create CLI token**, copy the line the page shows (`<org> crr_...`) and paste it here."
+2. Stop and wait for the user. Do not retry, do not poll.
+3. With the line, run `rakerun login --base-url https://<host> --token '<org> crr_...'`. The org comes from the line. Then `rakerun repo list` to verify.
+
+The line is the user's CLI token with every scope of the org. It passes through the chat once. Never print it back, never write it to a file in the repo, and tell the user they can revoke it on the console **Tokens** screen. In CI, `rakerun login --base-url https://<org>.<domain> --token -` reads a `crr_` token from stdin; create one with `rakerun token create ci --scopes run,read` or on the Tokens screen. `--paste` is for a human on a remote shell: it reads the line from the terminal.
 
 Profiles: one per org host in `~/.config/rakerun/config.json`. `rakerun profile list`, `rakerun profile use <name>`, `--profile <name>` on any command. `--base-url https://acme.cloudraker.run` targets another host.
 
