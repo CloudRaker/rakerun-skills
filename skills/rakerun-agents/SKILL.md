@@ -51,7 +51,7 @@ Built-in tools every agent has: `message` (text to the caller), `done` (the resu
 name: Linear triage          # display name, leaf-only
 mode: zeroshot               # zeroshot (one request, one run) | turns (caller sends turns; ask tool; idle_ttl)
 idle_ttl: 24h                # turns only, 1m to 30d
-retention: 30d               # runs, events, files, 1d to 90d
+retention: 30d               # runs, events, files, 1m to 90d (1m: zero data retention)
 timeout: 10m                 # one turn, 10s to 60m
 model:
   id: anthropic/claude-sonnet-5-5   # provider/model
