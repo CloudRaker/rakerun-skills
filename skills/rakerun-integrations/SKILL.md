@@ -60,7 +60,7 @@ rakerun token create triage-only --scopes run,read --agents linear-triage --expi
 rakerun token revoke tok_01…
 ```
 
-Scopes: `run` (start and turns), `read` (runs and events), `cancel`, `git` (push and clone), `secrets` (the `/_secrets` API), `admin` (the console API as an admin: secrets, connectors, tokens, data writes), `preview` (preview hosts), `delegate` (`x-run-as`). The CLI itself needs `admin` for writes, `read` for reads. A caller of an agent needs `run` and `read`. Never paste a token into a repo file or a chat message.
+Scopes: `run` (start and turns), `read` (runs and events), `cancel`, `git` (push and clone), `secrets` (the `/_secrets` API), `admin` (the console API as an admin: secrets, connectors, tokens, data writes), `preview` (preview hosts), `act_as` (`x-run-as`). The CLI itself needs `admin` for writes, `read` for reads. A caller of an agent needs `run` and `read`. Never paste a token into a repo file or a chat message.
 
 ## Webhooks
 

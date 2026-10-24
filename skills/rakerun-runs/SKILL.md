@@ -18,11 +18,13 @@ rakerun run start linear-triage --data '{"ticket": "EGR-123"}'             # 202
 rakerun run start triage --repo agents --branch try-it --stream            # a repo-qualified agent on a preview
 ```
 
-`--stream` prints the events as they arrive: `message` text as is, `· progress` on stderr, `✓ completed` with the `done` result as JSON, `✗ failed: <code>: <message>`, a `?` question with the turn command to answer it. It ends on the terminal event. Without `--stream`, follow later with `rakerun run stream <id>` (replays from the first event).
+`--stream` prints the events as they arrive: `message` text as is, `· progress` on stderr, `✓ completed` with the `done` result as JSON, `✗ failed: <code>: <message>`, a `?` question with the turn command to answer it. A lead agent (one with `agents:`) also prints its run tree on stderr: `→ delegated to <agent> (<run>)`, `← <agent>: <status> <summary>`, `✉ to <agent>: <text>` and `✉ from <agent>: <text>`. It ends on the terminal event. Without `--stream`, follow later with `rakerun run stream <id>` (replays from the first event).
 
 `--json` prints one JSON event per line, the raw envelopes (`id`, `seq`, `type`, `ts`, `run_id`, `agent`, `turn`, `data`).
 
-Event types: `run.started`, `turn.started`, `message`, `question`, `file`, `run.progress`, `data.changed`, `event.{name}` (custom), `turn.completed`, `run.completed`, `run.failed`, `run.cancelled`, `run.expired`.
+Event types: `run.started`, `turn.started`, `message`, `question`, `file`, `run.progress`, `data.changed`, `event.{name}` (custom), `child.started`, `child.reported`, `agent_message.sent`, `agent_message.received`, `turn.completed`, `run.completed`, `run.failed`, `run.cancelled`, `run.expired`.
+
+A lead that delegated ends its turn with `turn.completed` reason `children` and waits. It resumes with one new turn when every child of that turn reports. A child that ends because its parent ended has `run.cancelled` with `by: parent`.
 
 ## Turns
 
@@ -41,6 +43,9 @@ The stream of a turn ends at `turn.completed`. A `waiting` run expires after `id
 rakerun run list --limit 20
 rakerun run list --agent linear-triage --status failed --from 2026-10-01T00:00:00Z
 rakerun run list --cursor <next cursor>     # printed at the end of a page
+rakerun run list --root-only                 # no child runs
+rakerun run list --parent run_01…            # the child runs of one run (the PARENT column)
+rakerun run children run_01…                 # the same, shorter
 rakerun run show run_01…                     # status, turn, deployment sha, usage, result, error
 rakerun run cancel run_01…
 ```

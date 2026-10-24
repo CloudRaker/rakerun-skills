@@ -1,7 +1,7 @@
 ---
 name: rakerun-agents
 description: |
-  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, model, triggers, limits, network, secrets, connectors, data, knowledge, events, webhooks), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions) and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run.
+  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, model, triggers, limits, network, secrets, connectors, data, knowledge, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions) and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -28,7 +28,7 @@ my-agents/
     _code/label.ts
 ```
 
-Rules: a folder with `AGENTS.md` is an agent (R1); names match `[a-z0-9][a-z0-9-]{0,62}`, names with `_` are reserved (R2); an agent folder cannot hold another agent (R8, `nested_agent`); `knowledge/` never holds an agent (R10). Lists in `agent.yml` (`connectors`, `data.read`, `knowledge`, `model.fallback`) replace the parent list, maps deep-merge, scalars take the leaf. A root `agent.yml` cannot set a leaf-only key (`root_leaf_key`): `name`, `mode`, `idle_ttl`, `triggers`, `email`, `phone`, `output_schema`, `events`, `webhooks`, `protection`.
+Rules: a folder with `AGENTS.md` is an agent (R1); names match `[a-z0-9][a-z0-9-]{0,62}`, names with `_` are reserved (R2); an agent folder cannot hold another agent (R8, `nested_agent`); `knowledge/` never holds an agent (R10). Lists in `agent.yml` (`connectors`, `data.read`, `knowledge`, `model.fallback`) replace the parent list, maps deep-merge, scalars take the leaf. A root `agent.yml` cannot set a leaf-only key (`root_leaf_key`): `name`, `mode`, `idle_ttl`, `triggers`, `email`, `phone`, `output_schema`, `events`, `webhooks`, `protection`, `workspace_act_as`, `agents`.
 
 ## AGENTS.md
 
@@ -43,7 +43,7 @@ You triage new Linear issues for the EGR team.
 3. End with `done` and `{ "label": ..., "priority": ... }`.
 ```
 
-Built-in tools every agent has: `message` (text to the caller), `done` (the result, validated by `output_schema`), `ask` (`turns` mode only: a question the caller answers on the next turn), `list_files`, `read_file`, file tools (`file_read`, `file_parse`, `file_extract`, `file_redact`, `file_markdown_to_pdf`, `file_write`), `execute_code`, `save_code`. Name the tool in the prompt when the order matters.
+Built-in tools every agent has: `message` (text to the caller), `done` (the result, validated by `output_schema`), `ask` (`turns` mode only: a question the caller answers on the next turn), `list_files`, `read_file`, file tools (`file_read`, `file_parse`, `file_extract`, `file_redact`, `file_markdown_to_pdf`, `file_write`), `execute_code`, `save_code`. An agent with an `agents:` key also gets `delegate` and `message_agent` (see below). Name the tool in the prompt when the order matters.
 
 ## agent.yml, the keys that matter
 
@@ -96,6 +96,113 @@ protection: token                # token | public | access; public refuses secre
 ```
 
 Formats: durations `10s 10m 24h 30d`, sizes `512KB 50MB`, secret references `${secret:NAME}` with `NAME` in `[A-Z][A-Z0-9_]*` (a bare `secret: NAME` fails with `secret_bare_name`), model ids `provider/model`.
+
+## Agents that work together (`agents`)
+
+Leaf-only. A lead agent gives a task to another agent of the same repo (`delegate`). The task runs as a **child run** of the lead run. An agent can also send a message to a live `turns` run of the same run tree (`message`). A run tree is the first run and every run that it started, at any depth. The caller lists its targets. The target agent needs no opt-in.
+
+```yaml
+# lead/agent.yml
+mode: turns
+agents:
+  delegate:
+    - research/web                                # a full agent path of the repo
+    - agent: finance/analyst
+      when: Numbers, forecasts and spreadsheets   # a routing hint for the lead, max 200 characters
+  message:
+    - review/editor                               # must be a mode: turns agent
+  limits:                                         # optional
+    max_depth: 2           # 1 to 3. Read from the root run only.
+    children_per_turn: 5   # 1 to 10
+    children_per_run: 10   # 1 to 25
+    messages_per_tree: 50  # 1 to 200. Read from the root run only.
+    tree_credits: 500      # optional. Read from the root run only.
+```
+
+An entry is a full agent path, `{agent, when}`, or `'*'` (every other agent of the repo, alone in its list). Each list takes at most 20 entries, and an agent appears once.
+
+### Example: a lead and a researcher
+
+```text
+my-agents/
+  lead/
+    AGENTS.md
+    agent.yml        # mode: turns, delegates to researcher
+  researcher/
+    AGENTS.md
+    agent.yml        # mode: zeroshot, output_schema
+```
+
+```yaml
+# lead/agent.yml
+name: Research lead
+mode: turns
+agents:
+  delegate:
+    - agent: researcher
+      when: One factual question that needs web sources
+```
+
+```yaml
+# researcher/agent.yml
+name: Researcher
+mode: zeroshot
+output_schema:
+  type: object
+  required: [answer, sources]
+  properties:
+    answer: { type: string }
+    sources: { type: array, items: { type: string } }
+network:
+  '*.wikipedia.org': {}
+```
+
+```markdown
+# Research lead
+
+1. Split the question of the user into at most 3 factual questions.
+2. For each one, call `delegate` with agent `researcher`. Put every fact the
+   researcher needs in `context`: it never sees this conversation.
+3. When the reports come back, write one answer and list the sources.
+```
+
+### How it works
+
+- `delegate({agent, task, expected_output?, context?, data?})` returns `{child_run_id}` at once. `data` is the input of a target with `input_schema`. The child starts on the same deployment as the lead.
+- **Join.** After the step, the lead ends its turn and waits (`turn.completed` with reason `children`). A waiting lead holds no concurrency slot. It resumes with ONE new turn when every child of that turn reports. That turn holds one report per child: the agent, the status and the result (the `done` result, else the last message, cut at 8,000 characters).
+- A `zeroshot` child reports when it ends. A `turns` child reports when its first turn ends (status `answered`) and stays alive for messages. A child that ends a turn with `ask` reports `question`: the lead answers with `message_agent` to that child run.
+- `message_agent({to, text, expect_reply?})`: `to` is a run id of the tree or an agent path (the newest live run of that agent in the tree). With `expect_reply: true`, the sender waits for the reply in the same join.
+- **Messages need `turns` agents.** A message reaches a live `mode: turns` run of the same tree only. It never starts a run. A message to a `zeroshot` run fails with `not_turn_based` (a child to its parent is the exception). A lead can always message its own children, and a child its own parent. A message to any other run of the tree needs the target agent in `agents.message`.
+- Agent text is data. A report or a message is never a person turn and cannot answer an approval. The approvals of a child go to a person: the root conversation and the Inbox.
+- A child acts for the same person as the lead turn. The `workspace_act_as` identity of the lead does not flow to a child. When a lead run ends, every child that is still live ends too (`run.cancelled` with `by: parent`).
+- `rakerun run children <id>` lists the child runs. `rakerun run list --root-only` hides them.
+
+**Limits and billing.** By default a tree is 2 levels deep, a run starts at most 5 children per turn and 10 per run, and a tree sends at most 50 agent messages. `agents.limits` raises them to 3, 10, 25 and 200. One run sends at most 20 messages to one other run, and the same text twice in a row is dropped (`duplicate_message`). A child is a normal run: it bills its own minutes and AI usage, and counts against the daily run cap and concurrency. The lead shows its own credits and the tree total. `tree_credits` refuses new children when the tree total passes it.
+
+Tool errors: `delegate` answers `agent_not_allowed`, `delegate_depth`, `delegate_limit`, `delegate_cycle`, `tree_credits`, `agent_unavailable` or `start_refused`. `message_agent` answers `agent_not_allowed`, `run_not_in_tree`, `no_live_run`, `not_turn_based`, `run_ended`, `message_limit` or `duplicate_message`.
+
+| Rule | Level | Check |
+| --- | --- | --- |
+| `agents_target_unknown` | error | A `delegate` or `message` entry names no agent of the repo |
+| `agents_target_self` | error | An entry names the agent itself |
+| `agents_delegate_cycle` | warning | The `delegate` entries form a cycle. A run refuses it with `delegate_cycle` |
+| `agents_message_zeroshot` | warning | A `message` target is a `zeroshot` agent. The message always fails |
+| `agents_root_limits` | warning | A `delegate` target sets `max_depth`, `messages_per_tree` or `tree_credits`. Only the root run reads them |
+
+## Act as a person (`workspace_act_as`)
+
+Leaf-only. The agent works in the Google Workspace or Microsoft 365 mailbox and calendar of one person. The key was `delegation:`. There is no alias: `delegation:` fails the schema.
+
+```yaml
+workspace_act_as:
+  tools:
+    mail: [read, draft]           # read, draft, send, attachments
+    calendar: [read, free_busy]   # read, free_busy, write
+    directory: [search]
+  as: { from: header, allow: [acme.com] }   # or a fixed person: as: lea@acme.com
+```
+
+`from: header` takes the person from the `x-run-as` header. The caller needs a token with the `act_as` scope, and the agent needs `protection: token`. `from: sender` takes the Slack, Teams or email sender. Lint `act_as_identity_source` refuses `protection: public`, `from: sender` with no Slack, Teams or email trigger, and `triggers.email` with no `email.from`. Run errors start with `act_as_`, for example `act_as_identity_required` and `act_as_scope_required`.
 
 ## Tools from the repo
 
@@ -257,7 +364,7 @@ To share an app as a developer, commit and push (`rakerun deploy`). The CLI neve
 2. Every `${secret:NAME}` is declared under `secrets:` and set: `rakerun secret list`, `rakerun secret set NAME`.
 3. Every host the agent calls is under `network:` (or comes from `_apis`, `mcp.json`, a connector).
 4. Every name in `connectors:` exists, is granted and is `connected`: `rakerun connector list`. Every name in a `tools:` list is a server tool that the connector allows: `rakerun connector tools <name>`. A wrong name fails the run with `connector_unavailable`.
-5. `mode: turns` when the agent must ask questions; `zeroshot` otherwise.
+5. `mode: turns` when the agent must ask questions or receive messages from other agents; `zeroshot` otherwise.
 6. After the deploy: `rakerun agent show <agent>` prints the resolved config, the tool list, the missing secrets and the deployments.
 
 ## See also
