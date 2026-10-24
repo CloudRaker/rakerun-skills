@@ -57,7 +57,7 @@ model:
   id: anthropic/claude-sonnet-5-5   # provider/model
   temperature: 0.2
   max_output_tokens: 8000
-  reasoning: medium          # low | medium | high
+  reasoning: medium          # none | low | medium | high
   allow_override: false      # true lets a run request pick model.id
 triggers:                    # leaf-only; without the key, http is on
   http: true
