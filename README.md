@@ -32,7 +32,8 @@ Or as a Claude Code plugin:
 | [`rakerun`](./skills/rakerun) | Umbrella: install, login, the repo model, the deploy loop, where each task goes |
 | [`rakerun-projects`](./skills/rakerun-projects) | `new`, `template`, `lint`, `deploy`, `repo`, previews, rollbacks |
 | [`rakerun-agents`](./skills/rakerun-agents) | Writing an agent: `AGENTS.md`, `agent.yml` keys, modes, triggers, tools from the repo, inheritance |
-| [`rakerun-runs`](./skills/rakerun-runs) | Start, stream, turns, history, trace, messages, cancel, the event types |
+| [`rakerun-runs`](./skills/rakerun-runs) | Start, stream, turns, history, trace, messages, cancel, the event types, runs against conversations |
+| [`rakerun-doors`](./skills/rakerun-doors) | Front doors (`doors/{name}.yml`): web chat, phone, email, Slack and Teams, guards, router, handoff, limits, bindings, embed keys, conversations |
 | [`rakerun-integrations`](./skills/rakerun-integrations) | Secrets and `network:`, MCP connectors, tokens, webhooks |
 | [`rakerun-knowledge`](./skills/rakerun-knowledge) | Structured Memory (`_schemas/`, `data:`, records) and `knowledge/` folders |
 | [`rakerun-onboarding`](./skills/rakerun-onboarding) | Set up an organization from sign-in to a first tested agent, with the console checklist |

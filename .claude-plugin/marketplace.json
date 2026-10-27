@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "rakerun-skills",
   "metadata": {
-    "description": "CloudRaker Run skills for Claude Code"
+    "description": "CloudRaker Run skills for Claude Code: agents, deploys, runs, front doors and conversations"
   },
   "owner": {
     "name": "CloudRaker",

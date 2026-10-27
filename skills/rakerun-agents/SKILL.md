@@ -1,7 +1,7 @@
 ---
 name: rakerun-agents
 description: |
-  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, model, triggers, limits, network, secrets, connectors, data, knowledge, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions) and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run.
+  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, model, triggers, limits, network, secrets, connectors, data, knowledge, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions) and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run. For web chat, phone, email, Slack or Teams, use rakerun-doors.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -28,7 +28,7 @@ my-agents/
     _code/label.ts
 ```
 
-Rules: a folder with `AGENTS.md` is an agent (R1); names match `[a-z0-9][a-z0-9-]{0,62}`, names with `_` are reserved (R2); an agent folder cannot hold another agent (R8, `nested_agent`); `knowledge/` never holds an agent (R10). Lists in `agent.yml` (`connectors`, `data.read`, `knowledge`, `model.fallback`) replace the parent list, maps deep-merge, scalars take the leaf. A root `agent.yml` cannot set a leaf-only key (`root_leaf_key`): `name`, `mode`, `idle_ttl`, `triggers`, `email`, `phone`, `output_schema`, `events`, `webhooks`, `protection`, `workspace_act_as`, `agents`.
+Rules: a folder with `AGENTS.md` is an agent (R1); names match `[a-z0-9][a-z0-9-]{0,62}`, names with `_` are reserved (R2); an agent folder cannot hold another agent (R8, `nested_agent`); `knowledge/` never holds an agent (R10); `doors/` holds the front doors and never an agent (R11, see [rakerun-doors](../rakerun-doors/SKILL.md)). Lists in `agent.yml` (`connectors`, `data.read`, `knowledge`, `model.fallback`) replace the parent list, maps deep-merge, scalars take the leaf. A root `agent.yml` cannot set a leaf-only key (`root_leaf_key`): `name`, `mode`, `idle_ttl`, `triggers`, `output_schema`, `events`, `webhooks`, `protection`, `workspace_act_as`, `agents`.
 
 ## AGENTS.md
 
@@ -59,10 +59,8 @@ model:
   max_output_tokens: 8000
   reasoning: medium          # none | low | medium | high
   allow_override: false      # true lets a run request pick model.id
-triggers:                    # leaf-only; without the key, http is on
+triggers:                    # leaf-only; without the key, http is on. Not conversations.
   http: true
-  email: true                # {org}.{base}.{agent}@cloudraker.run, attachments become run files
-  slack: true                # routed by slack.yml of the org routing repo
   schedule: '0 * * * *'      # cron, UTC, 1 minute minimum, skips while the previous tick runs
   inbound:
     linear: { events: [issue.created], secret: '${secret:LINEAR_WEBHOOK_SECRET}' }
@@ -94,6 +92,8 @@ knowledge: [sales/pre-sales, legal]                             # folders under 
 files: { read_raw: false }
 protection: token                # token | public | access; public refuses secrets and model override
 ```
+
+People reach agents by web chat, phone, email, Slack or Teams through a front door, `doors/{name}.yml`, never through `agent.yml`. The old keys (`email`, `slack`, `teams` or `phone` under `triggers`, and the `email:` and `phone:` blocks) fail lint with `agent_yml_schema`, and the message names the door key. There is no alias. See [rakerun-doors](../rakerun-doors/SKILL.md).
 
 Formats: durations `10s 10m 24h 30d`, sizes `512KB 50MB`, secret references `${secret:NAME}` with `NAME` in `[A-Z][A-Z0-9_]*` (a bare `secret: NAME` fails with `secret_bare_name`), model ids `provider/model`.
 
@@ -202,7 +202,7 @@ workspace_act_as:
   as: { from: header, allow: [acme.com] }   # or a fixed person: as: lea@acme.com
 ```
 
-`from: header` takes the person from the `x-run-as` header. The caller needs a token with the `act_as` scope, and the agent needs `protection: token`. `from: sender` takes the Slack, Teams or email sender. Lint `act_as_identity_source` refuses `protection: public`, `from: sender` with no Slack, Teams or email trigger, and `triggers.email` with no `email.from`. Run errors start with `act_as_`, for example `act_as_identity_required` and `act_as_scope_required`.
+`from: header` takes the person from the `x-run-as` header. The caller needs a token with the `act_as` scope, and the agent needs `protection: token`. `from: sender` takes the Slack, Teams or verified email sender of a conversation. Lint `act_as_identity_source` refuses `protection: public`, `from: sender` when no door with `channels.slack`, `channels.teams` or `channels.email` lists the agent, and `from: sender` in a door with `channels.email` and no `channels.email.allow_from`. Run errors start with `act_as_`, for example `act_as_identity_required` and `act_as_scope_required`.
 
 ## Tools from the repo
 
@@ -215,6 +215,8 @@ workspace_act_as:
 | `events:` | `emit_{name}` |
 | `knowledge:` | `knowledge_search`, `knowledge_read` |
 | `data:` | `data.schemas`, `data.query`, `data.get`, `data.create`, `data.update`, `data.delete`, `data.upsert` |
+| A front door with more agents or languages | `handoff`, `switch_language` (see rakerun-doors) |
+| A front door with `channels.phone` | `end_call`, `transfer_call`, `call_phone` (with `outbound: true`) |
 
 A `_code` script exports `run(input)`. Its leading comment is the description; an `@input` line holds the input JSON Schema:
 
@@ -226,7 +228,7 @@ export function run(input) {
 }
 ```
 
-A script name cannot collide with a built-in tool or the prefixes `data_`, `file_`, `emit_`, `mcp_`, `knowledge_` (`code_tool_collision`).
+A script name cannot collide with a built-in tool (also `handoff`, `switch_language`) or the prefixes `data_`, `file_`, `emit_`, `mcp_`, `knowledge_` (`code_tool_collision`).
 
 ## Apps
 
@@ -364,7 +366,7 @@ To share an app as a developer, commit and push (`rakerun deploy`). The CLI neve
 2. Every `${secret:NAME}` is declared under `secrets:` and set: `rakerun secret list`, `rakerun secret set NAME`.
 3. Every host the agent calls is under `network:` (or comes from `_apis`, `mcp.json`, a connector).
 4. Every name in `connectors:` exists, is granted and is `connected`: `rakerun connector list`. Every name in a `tools:` list is a server tool that the connector allows: `rakerun connector tools <name>`. A wrong name fails the run with `connector_unavailable`.
-5. `mode: turns` when the agent must ask questions or receive messages from other agents; `zeroshot` otherwise.
+5. `mode: turns` when the agent must ask questions, receive messages from other agents, or take calls in a door with `channels.phone`; `zeroshot` otherwise.
 6. After the deploy: `rakerun agent show <agent>` prints the resolved config, the tool list, the missing secrets and the deployments.
 
 ## See also
@@ -372,3 +374,4 @@ To share an app as a developer, commit and push (`rakerun deploy`). The CLI neve
 - [rakerun-runs](../rakerun-runs/SKILL.md) to test the agent
 - [rakerun-integrations](../rakerun-integrations/SKILL.md) for secrets and connectors
 - [rakerun-knowledge](../rakerun-knowledge/SKILL.md) for `_schemas/` and `knowledge/`
+- [rakerun-doors](../rakerun-doors/SKILL.md) for front doors, channels and conversations

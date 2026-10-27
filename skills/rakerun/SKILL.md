@@ -1,7 +1,7 @@
 ---
 name: rakerun
 description: |
-  Any task on cloudraker.run through the rakerun CLI: create a project of agents from templates, write or change an agent (AGENTS.md and agent.yml), deploy it as an HTTPS endpoint, run it and stream the answer, manage secrets, MCP connectors, tokens, webhooks, Structured Memory records and knowledge folders. Use whenever the user wants to build, deploy, run or operate agents on CloudRaker Run.
+  Any task on cloudraker.run through the rakerun CLI: create a project of agents from templates, write or change an agent (AGENTS.md and agent.yml), deploy it as an HTTPS endpoint, run it and stream the answer, put it in front of people with a front door (web chat, phone, email, Slack, Teams), manage secrets, MCP connectors, tokens, webhooks, Structured Memory records and knowledge folders. Use whenever the user wants to build, deploy, run or operate agents on CloudRaker Run.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -71,6 +71,7 @@ rakerun run start linear-triage --input "Triage EGR-123" --stream
 | --- | --- |
 | New project, templates, lint, deploy, repo, previews, rollback | [rakerun-projects](../rakerun-projects/SKILL.md) |
 | Write or change an agent: prompt, `agent.yml`, triggers, tools | [rakerun-agents](../rakerun-agents/SKILL.md) |
+| Web chat, phone, email, Slack, Teams: front doors, bindings, embed keys, conversations | [rakerun-doors](../rakerun-doors/SKILL.md) |
 | Start, stream, turns, history, trace, cancel | [rakerun-runs](../rakerun-runs/SKILL.md) |
 | Secrets, `network:`, MCP connectors, tokens, webhooks | [rakerun-integrations](../rakerun-integrations/SKILL.md) |
 | Structured Memory records and schemas, `knowledge/` folders | [rakerun-knowledge](../rakerun-knowledge/SKILL.md) |

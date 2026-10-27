@@ -32,7 +32,7 @@ rakerun template import invoice-extractor  # writes invoice-extractor/ into the 
 rakerun template import invoice-extractor --folder invoices --dir ./my-agents
 ```
 
-A template is one agent folder. Import writes it under `<folder>/` (the template id by default) and refuses an existing folder. After an import: read the `AGENTS.md`, set the secrets and connectors the template names (`rakerun template show` lists them), then `rakerun deploy`.
+A template is one agent folder. Import writes it under `<folder>/` (the template id by default) and refuses an existing folder. A template with a phone, email or Slack channel also carries a front door: import writes it to `doors/<id>.yml` at the repo root and refuses an existing door file. The door names the agent by the template id: with `--folder`, change `entry` in the door file. Then bind the channel (see rakerun-doors). After an import: read the `AGENTS.md`, set the secrets and connectors the template names (`rakerun template show` lists them), then `rakerun deploy`.
 
 Prefer a template over a blank agent: edit the prompt and the `agent.yml` of a working agent.
 
@@ -44,7 +44,7 @@ rakerun lint ./my-agents
 rakerun lint --repo my-agents   # also checks _schemas changes against the live tree (schema_breaking)
 ```
 
-Output: one line per issue, `error|warning  path:line  rule  message`, then a summary. Exit 1 on an error: the push would be refused. The rules are the gateway rules (the lint code is bundled in the CLI): `agent_yml_schema`, `root_leaf_key`, `secret_undeclared`, `secret_value`, `nested_agent`, `code_tool_collision`, `knowledge_agent_folder` and the rest. Fix the named file and line.
+Output: one line per issue, `error|warning  path:line  rule  message`, then a summary. Exit 1 on an error: the push would be refused. The rules are the gateway rules (the lint code is bundled in the CLI): `agent_yml_schema`, `root_leaf_key`, `secret_undeclared`, `secret_value`, `nested_agent`, `code_tool_collision`, `knowledge_agent_folder`, the `door_*` rules of `doors/*.yml` and the rest. The summary counts agents and doors: `2 agent(s), 1 door(s), 0 error(s), 0 warning(s)`. Fix the named file and line.
 
 ## Deploy
 

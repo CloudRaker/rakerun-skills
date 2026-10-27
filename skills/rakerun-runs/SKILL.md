@@ -1,7 +1,7 @@
 ---
 name: rakerun-runs
 description: |
-  Run cloudraker.run agents from the rakerun CLI: start a run with text or JSON input, stream the events, send turns and answers, list and filter the history, read a run, its trace and its messages, cancel. Use when the user wants to test, call or debug an agent.
+  Run cloudraker.run agents from the rakerun CLI: start a run with text or JSON input, stream the events, send turns and answers, list and filter the history, read a run, its trace and its messages, cancel. Explains runs against conversations. Use when the user wants to test, call or debug an agent.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -61,6 +61,17 @@ rakerun run show run_01… --json | jq .usage   # tokens, model steps, code call
 ```
 
 Read the trace first on a failed run: the failing span carries the error. `secret_missing` means `rakerun secret set NAME`; `egress_denied` means the host is not under `network:`; `connector_unavailable` means `rakerun connector list` shows the connector missing, not granted, or not `connected`.
+
+## Runs and conversations
+
+A **run** is one agent, one execution: the unit of the trace and of billing. `rakerun run start`, an HTTP call, a schedule, an inbound webhook and a delegation start runs. They are not conversations.
+
+A **conversation** (`cv_...`) is one exchange with one person through a front door: web chat, phone, email, Slack, Teams or the console. It starts runs for its agents: a `main` run, then a `handoff` run when an agent passes the conversation on, and a `continuation` run when the person writes after a run ended. Each run of a conversation has `metadata.conversation_id`, `door`, `channel` and `end_user`.
+
+- Test a door with `rakerun conversation start --door <repo>/<name> --input ... --stream`, not with `run start`. See [rakerun-doors](../rakerun-doors/SKILL.md).
+- `rakerun conversation show <cv>` lists the runs of the conversation. Debug one run with `rakerun run trace <run>` and `rakerun run messages <run>`.
+- A run that a handoff ended has `run.cancelled` with `by: handoff`. A run of an ended conversation has `by: conversation`.
+- The door `session.retention` replaces the agent `retention` for the runs of its conversations.
 
 ## From code
 

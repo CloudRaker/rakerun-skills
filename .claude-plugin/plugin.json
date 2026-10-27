@@ -1,8 +1,8 @@
 {
   "name": "rakerun",
   "displayName": "CloudRaker Run",
-  "description": "Skills for cloudraker.run and its rakerun CLI: create projects from templates, write agents (AGENTS.md and agent.yml), deploy, run and stream, secrets and MCP connectors, Structured Memory and knowledge folders.",
-  "version": "0.1.0",
+  "description": "Skills for cloudraker.run and its rakerun CLI: create projects from templates, write agents (AGENTS.md and agent.yml), deploy, run and stream, front doors and conversations (web chat, phone, email, Slack, Teams), secrets and MCP connectors, Structured Memory and knowledge folders.",
+  "version": "0.2.0",
   "author": {
     "name": "CloudRaker",
     "url": "https://www.cloudraker.com"
@@ -16,6 +16,7 @@
     "./skills/rakerun-projects",
     "./skills/rakerun-agents",
     "./skills/rakerun-runs",
+    "./skills/rakerun-doors",
     "./skills/rakerun-integrations",
     "./skills/rakerun-knowledge",
     "./skills/rakerun-onboarding"
