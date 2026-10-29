@@ -1,7 +1,7 @@
 ---
 name: rakerun-integrations
 description: |
-  Connect cloudraker.run agents to the outside with the rakerun CLI: secrets and the network allow list, MCP connectors (OAuth or header from a secret, grants), API tokens and scopes, webhook deliveries. Use when an agent needs a credential, a remote MCP server, a token for a caller, or when a webhook delivery failed.
+  Connect cloudraker.run agents to the outside with the rakerun CLI: secrets and the network allow list, MCP connectors (OAuth, header from a secret or Run identity OIDC, grants), signed OIDC identity on outbound requests, API tokens and scopes, webhook deliveries. Use when an agent needs a credential, a remote MCP server, a token for a caller, or when a webhook delivery failed.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -24,11 +24,30 @@ rakerun secret rm LINEAR_TOKEN --repo agents
 
 Scopes, highest first at run time: the run request `secrets` (only for `overridable: true` names), the agent value, the repo value, the org value. A missing value deploys with a warning and fails the first run that needs it with `secret_missing`. Values are 8 bytes or longer, encrypted, never readable after write.
 
-`network:` rules: exact host or one leading `*.`, HTTPS 443 only, private targets refused, a wildcard host cannot carry headers, the model cannot set `authorization`. Hosts of `_apis`, `mcp.json` servers, connectors and `llm.gateway` join the allow list on their own.
+`network:` rules: exact host or one leading `*.`, HTTPS 443 only, private targets refused, a wildcard host cannot carry headers or `oidc`, the model cannot set `authorization`, injected headers and tokens are dropped on a redirect to another host. Hosts of `_apis`, `mcp.json` servers, connectors and `llm.gateway` join the allow list on their own.
+
+## Signed identity instead of a secret (OIDC)
+
+When an internal API can verify a JWT, give its host an `oidc:` block instead of a secret. The egress layer sends an RS256 token (at most 300 s) that names the agent (`sub: agent:{repo}/{agent}`) or the person of the turn (`sub: user:{workos_user_id}`, `email`, `act.sub`). Nothing to store, nothing to rotate on your side.
+
+```yaml
+network:
+  api.internal.acme.com:
+    oidc: { identity: user } # audience https://api.internal.acme.com; fixed for user
+  vault.acme.com:
+    oidc: { identity: agent, audience: vault://run, header: X-Run-Token }
+```
+
+- Issuer: `https://{org}.cloudraker.run`. Discovery: `/.well-known/openid-configuration`. JWKS: `/.well-known/jwks.json` (cache one hour). The console **Settings** screen shows both URLs.
+- Tell the API owner to pin `iss`, `aud` and `sub`, and for a user token to require an allowed agent in `act.sub` (else any agent of the org can act for a member). Check `exp` but do not require a fixed lifetime, and refuse a `branch` claim when previews must not call. One key set signs for every org, so `iss` is the only org check. `jti` is not one-time: a token is reused while more than 60 s remain.
+- `identity: user` needs a verified org member in the turn (console, team apps, mapped Slack or Teams sender). A mention run in a console conversation with no sender names the conversation owner. Schedules, webhooks, phone, email, web chat visitors and API tokens have none. Then a fetch, `_apis` or `_code` request fails with `identity_unavailable`. An MCP server or connector cannot list its tools, so its tools are missing from the turn.
+- Audit rows show `oidc:agent` or `oidc:user` as the secret name. Never the token.
+
+Full guide and a `jose` verification example: https://docs.cloudraker.com/run/guides/oidc-identity.
 
 ## MCP connectors
 
-A connector is a remote MCP server the org admin sets up once, with an OAuth login or a header from a secret, then grants to the org, a repo or an agent. Agents list it under `connectors: [name]` and get `mcp_{name}_{tool}`.
+A connector is a remote MCP server the org admin sets up once, with an OAuth login, a header from a secret or a Run identity (OIDC), then grants to the org, a repo or an agent. Agents list it under `connectors: [name]` and get `mcp_{name}_{tool}`.
 
 ```bash
 rakerun connector list                      # name, url, auth, status, identity, grants
@@ -44,6 +63,8 @@ rakerun connector disconnect linear
 rakerun connector tools linear              # the server tools, and which ones the connector allows
 rakerun connector rm linear
 ```
+
+A Run identity (OIDC) connector sends a signed token per request: no login, no stored token, status always `connected`. The audience defaults to `https://{host}` of the URL. Create it in the console (**Add connector**, auth **Run identity (OIDC)**, optional audience); `rakerun connector add` does not offer it yet. The agent picks the identity: `- name: crm` then `identity: user` in `connectors:` (default `agent`). Grant it like any connector.
 
 Statuses: `connected`, `expired` (an admin logs in again with `connect`), `error`, `not_connected`. A run fails before the first model step with `connector_unavailable` when a name in `connectors:` does not exist, is not granted to the agent, or has no valid login. Check `rakerun connector list` first when a run fails that way.
 

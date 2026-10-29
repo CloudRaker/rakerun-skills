@@ -73,7 +73,7 @@ rakerun run start linear-triage --input "Triage EGR-123" --stream
 | Write or change an agent: prompt, `agent.yml`, triggers, tools | [rakerun-agents](../rakerun-agents/SKILL.md) |
 | Web chat, phone, email, Slack, Teams: front doors, bindings, embed keys, conversations | [rakerun-doors](../rakerun-doors/SKILL.md) |
 | Start, stream, turns, history, trace, cancel | [rakerun-runs](../rakerun-runs/SKILL.md) |
-| Secrets, `network:`, MCP connectors, tokens, webhooks | [rakerun-integrations](../rakerun-integrations/SKILL.md) |
+| Secrets, `network:` (also `oidc` signed identity), MCP connectors, tokens, webhooks | [rakerun-integrations](../rakerun-integrations/SKILL.md) |
 | Structured Memory records and schemas, `knowledge/` folders | [rakerun-knowledge](../rakerun-knowledge/SKILL.md) |
 | Set up a new organization, the onboarding checklist | [rakerun-onboarding](../rakerun-onboarding/SKILL.md) |
 
