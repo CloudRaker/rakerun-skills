@@ -44,7 +44,7 @@ You triage new Linear issues for the EGR team.
 3. End with `done` and `{ "label": ..., "priority": ... }`.
 ```
 
-Built-in tools every agent has: `message` (text to the caller), `done` (the result, validated by `output_schema`), `ask` (`turns` mode only: a question the caller answers on the next turn), `list_files`, `read_file`, file tools (`file_read`, `file_parse`, `file_extract`, `file_redact`, `file_markdown_to_pdf`, `file_write`), `execute_code`, `save_code`. An agent with an `agents:` key also gets `delegate` and `message_agent` (see below). Name the tool in the prompt when the order matters.
+Built-in tools every agent has: `message` (text to the caller), `done` (the result, validated by `output_schema`), `ask` (`turns` mode only: a question the caller answers on the next turn), `list_files`, `read_file`, file tools (`file_read`, `file_write`, `file_replace`, `file`), and the Paperwork tools when the run holds a file grant (`file_parse`, `file_extract`, `file_redact`, `file_markdown_to_pdf`, `file_form_fields`, `file_fill`, `file_classify`, `file_split`, `file_redline_read`, `file_redline`, `file_convert_pdf`, `file_merge`, `file_render_page`, `file_sign_send`, `file_sign_status`, `file_sign_void`), `execute_code`, `save_code`. An agent with an `agents:` key also gets `delegate` and `message_agent` (see below). Name the tool in the prompt when the order matters.
 
 ## agent.yml, the keys that matter
 
@@ -65,6 +65,7 @@ triggers: # leaf-only; without the key, http is on. Not conversations.
   schedule: '0 * * * *' # cron, UTC, 1 minute minimum, skips while the previous tick runs
   inbound:
     linear: { events: [issue.created], secret: '${secret:LINEAR_WEBHOOK_SECRET}' }
+  paperwork: [sign.ended] # a new run when an envelope of an ended run ends; input { event, envelope_id, status, signers, signed_file_id?, from_run_id }
 input_schema: { type: object } # 422 input_schema on a mismatch
 output_schema: { type: object } # leaf-only; the done payload
 events: # leaf-only; each becomes a tool emit_{name}, the caller sees event.{name}
