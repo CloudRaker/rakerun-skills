@@ -124,13 +124,14 @@ network:
 - A preview run gets tokens with a `branch` claim.
 - `oidc` deep-merges like the rest of `network:`. Lint runs on the resolved config of each agent.
 
-| Lint                   | Level   | Rule                                                                                      |
-| ---------------------- | ------- | ----------------------------------------------------------------------------------------- |
-| `oidc_wildcard`        | error   | `oidc` on a `*.` host                                                                     |
-| `oidc_user_audience`   | error   | `identity: user` with an audience other than `https://{host}`                             |
-| `oidc_header_conflict` | error   | `oidc` and `headers` set the same header on one host                                      |
-| `oidc_identity_source` | error   | `identity: user` on a host or connector of a `protection: public` agent                   |
-| `api_security_header`  | warning | An `_apis` file needs a header that `network:` lacks. An `oidc` header counts as supplied |
+| Lint                      | Level   | Rule                                                                                                              |
+| ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `oidc_wildcard`           | error   | `oidc` on a `*.` host                                                                                             |
+| `oidc_user_audience`      | error   | `identity: user` with an audience other than `https://{host}`                                                     |
+| `oidc_header_conflict`    | error   | `oidc` and `headers` set the same header on one host                                                              |
+| `user_identity_source`    | error   | `identity: user` on a host or connector of a `protection: public` agent                                           |
+| `user_identity_no_person` | warning | Every trigger of the agent has no person (schedule, inbound, phone, email), and a connector has `identity: user`. |
+| `api_security_header`     | warning | An `_apis` file needs a header that `network:` lacks. An `oidc` header counts as supplied                         |
 
 Reference: https://docs.cloudraker.com/run/guides/oidc-identity.
 
