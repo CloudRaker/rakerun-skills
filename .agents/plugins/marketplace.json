@@ -11,6 +11,14 @@
         "path": "./"
       },
       "category": "Productivity"
+    },
+    {
+      "name": "rakerun-business",
+      "source": {
+        "source": "local",
+        "path": "./business"
+      },
+      "category": "Productivity"
     }
   ]
 }

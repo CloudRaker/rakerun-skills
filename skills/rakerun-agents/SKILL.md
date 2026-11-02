@@ -1,7 +1,7 @@
 ---
 name: rakerun-agents
 description: |
-  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, model, triggers, limits, network with oidc identity, secrets, connectors, data, knowledge, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions) and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run. For web chat, phone, email, Slack or Teams, use rakerun-doors.
+  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, model, triggers, limits, network with oidc identity, secrets, connectors, data, knowledge, tools, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions), the flag tool, runs on one record and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run. For web chat, phone, email, Slack or Teams, use rakerun-doors.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -44,7 +44,7 @@ You triage new Linear issues for the EGR team.
 3. End with `done` and `{ "label": ..., "priority": ... }`.
 ```
 
-Built-in tools every agent has: `message` (text to the caller), `done` (the result, validated by `output_schema`), `ask` (`turns` mode only: a question the caller answers on the next turn), `list_files`, `read_file`, file tools (`file_read`, `file_write`, `file_replace`, `file`), and the Paperwork tools when the run holds a file grant (`file_parse`, `file_extract`, `file_redact`, `file_markdown_to_pdf`, `file_form_fields`, `file_fill`, `file_classify`, `file_split`, `file_redline_read`, `file_redline`, `file_convert_pdf`, `file_merge`, `file_render_page`, `file_sign_send`, `file_sign_status`, `file_sign_void`), `execute_code`, `save_code`. An agent with an `agents:` key also gets `delegate` and `message_agent` (see below). Name the tool in the prompt when the order matters.
+Built-in tools every agent has: `message` (text to the caller), `done` (the result, validated by `output_schema`), `ask` (`turns` mode only: a question the caller answers on the next turn), `list_files`, `read_file`, file tools (`file_read`, `file_write`, `file_replace`, `file`), and the Paperwork tools when the run holds a file grant (`file_parse`, `file_extract`, `file_redact`, `file_markdown_to_pdf`, `file_form_fields`, `file_fill`, `file_classify`, `file_split`, `file_redline_read`, `file_redline`, `file_convert_pdf`, `file_merge`, `file_render_page`, `file_sign_send`, `file_sign_status`, `file_sign_void`), `execute_code`, `save_code`, `flag` (an Inbox item for a person or a team, see [below](#flag-a-person-or-a-team)). An agent with an `agents:` key also gets `delegate` and `message_agent` (see below). Name the tool in the prompt when the order matters.
 
 ## agent.yml, the keys that matter
 
@@ -95,6 +95,7 @@ secrets: # declare every name you reference, else secret_undeclared
 limits: { max_steps: 60, max_code_calls: 40, code_cpu_ms: 30000, max_egress_bytes: 50MB }
 data: { read: [lead], write: [lead], create_schemas: false } # Structured Memory access
 knowledge: [sales/pre-sales, legal] # folders under knowledge/, or ['*']
+tools: { flag: off } # built-in tool switches: flag is on by default; inheritable, the leaf wins
 files: { read_raw: false }
 protection: token # token | public | access; public refuses secrets and model override
 ```
@@ -242,6 +243,42 @@ workspace_act_as:
 
 `from: header` takes the person from the `x-run-as` header. The caller needs a token with the `act_as` scope, and the agent needs `protection: token`. `from: sender` takes the Slack, Teams or verified email sender of a conversation. Lint `act_as_identity_source` refuses `protection: public`, `from: sender` when no door with `channels.slack`, `channels.teams` or `channels.email` lists the agent, and `from: sender` in a door with `channels.email` and no `channels.email.allow_from`. Run errors start with `act_as_`, for example `act_as_identity_required` and `act_as_scope_required`.
 
+## Flag a person or a team
+
+The built-in `flag` tool puts an item in the Inbox of one person or one team, and the run continues. It never waits for an approval. Use it when a person must look at something, for example three documents that the agent cannot file.
+
+```json
+{
+  "to": "reception",
+  "text": "Three referrals match no intake.",
+  "records": [{ "schema": "inbound_document", "id": "doc_8f2k" }],
+  "urgency": "high"
+}
+```
+
+- `to`: the email of one member of the organization, or one team slug. Another value answers `unknown_recipient`.
+- `text`: 1 to 500 characters. The item title is the text, cut at 140 characters.
+- `records`: at most 20 `{ schema, id }` refs. Each one must be a record that this run read or wrote, else `record_not_read`.
+- `urgency`: `normal` (default) or `high`. A `high` item shows first in its Inbox group.
+- A run sends at most 10 flags. The eleventh answers `flag_limit`.
+- The item shows in **Needs you** for the named person, or for each member of the named team. It counts in the badge and ranks with approvals. It stays open after the run ends.
+- A record ref shows its label only to a person who can open the record. Other people see "A record you cannot open".
+
+The tool is on in every mode, also `zeroshot`. `tools.flag: off` removes it. The key is inheritable and the leaf wins, so a leaf `flag: on` turns the tool on again under a root `flag: off`. Name the tool in `AGENTS.md`: "When no intake matches a document, call `flag` for the `reception` team."
+
+## Runs on one record
+
+A run can work on one record, its focus. It then reads and changes only the focus and the records that the focus passes access to (see [rakerun-records](../rakerun-records/SKILL.md#linked-records)). The rules of the person and the `data` grant of the agent still apply.
+
+- **Ask an agent** on a record page starts a conversation on that record. It lists the agents with `triggers.chat`, the person in their audience and a `data` grant on the record type. The conversation shows "Working on Intake INT-0042".
+- An API caller with a `crr_` token sends the focus in the body of `POST /{base}/{agent}`: `{"input": "...", "focus": {"schema": "intake", "id": "INT-0042"}}`. The `data` read grant of the agent on the focus record type decides. An anonymous or Cloudflare Access caller that sends `focus` gets `400 invalid_body`.
+- A caller who cannot open the focus gets `404 record_not_found`, and no run starts.
+- A run on a lab result does not open its intake. Access passes from the intake to the lab result, not back.
+- A new record must belong to the focus. When its record type has a `takes` field to the focus record type, Run fills it. When the focus record type has a `gives` field to its record type, Run adds the new id to the focus. Another create answers `focus_create`.
+- A call outside the focus answers `focus_scope`: "This conversation works on Intake INT-0042. Start a new conversation for Intake INT-7."
+- A continuation, a mention, a handoff and a child run keep the focus. They cannot clear it.
+- No `agent.yml` key turns this on. Write `AGENTS.md` so that the agent works on the record of the conversation, for example: "Work on the intake of this conversation. Add each lab result to it."
+
 ## Tools from the repo
 
 | Source                                                              | Tool the model sees                                                                                  |
@@ -253,6 +290,7 @@ workspace_act_as:
 | `events:`                                                           | `emit_{name}`                                                                                        |
 | `knowledge:`                                                        | `knowledge_search`, `knowledge_read`                                                                 |
 | `data:`                                                             | `data.schemas`, `data.query`, `data.get`, `data.create`, `data.update`, `data.delete`, `data.upsert` |
+| `data:` write on a filing queue and read on its case                | `data.file` (see [rakerun-records](../rakerun-records/SKILL.md#filing-queues))                       |
 | A front door with more agents or languages                          | `handoff`, `switch_language` (see rakerun-doors)                                                     |
 | A front door with `channels.phone`                                  | `end_call`, `transfer_call`, `call_phone` (with `outbound: true`)                                    |
 
@@ -300,7 +338,7 @@ claims/triage/
 - Every member sees and opens a project app. `audience` (`members`, `admins`, emails or team slugs) only narrows who sees it.
 - `tables` names tables of the project (`_schemas`). No agent grant caps them. A table in `write` is also read. Lint `app_table_unknown` refuses a table that the project does not have.
 - Each action names its `agent:`. An action with no agent is a lint error.
-- The app shows only the records the viewer can open. The record rules of `_schemas/<name>.yml` `access` decide (see rakerun-knowledge).
+- The app shows only the records the viewer can open. The record rules of `_schemas/<name>.yml` `access` decide (see [rakerun-records](../rakerun-records/SKILL.md)).
 - The Builder changes a project app. A publisher makes the change live.
 
 ### `<agent>/apps/<slug>.yml`
@@ -412,4 +450,5 @@ To share an app as a developer, commit and push (`rakerun deploy`). The CLI neve
 - [rakerun-runs](../rakerun-runs/SKILL.md) to test the agent
 - [rakerun-integrations](../rakerun-integrations/SKILL.md) for secrets and connectors
 - [rakerun-knowledge](../rakerun-knowledge/SKILL.md) for `_schemas/` and `knowledge/`
+- [rakerun-records](../rakerun-records/SKILL.md) for who can open records, linked records, teams, roles and filing queues
 - [rakerun-doors](../rakerun-doors/SKILL.md) for front doors, channels and conversations

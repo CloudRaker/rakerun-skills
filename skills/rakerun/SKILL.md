@@ -1,7 +1,7 @@
 ---
 name: rakerun
 description: |
-  Any task on cloudraker.run through the rakerun CLI: create a project of agents from templates, write or change an agent (AGENTS.md and agent.yml), deploy it as an HTTPS endpoint, run it and stream the answer, put it in front of people with a front door (web chat, phone, email, Slack, Teams), manage secrets, MCP connectors, tokens, webhooks, Structured Memory records and knowledge folders. Use whenever the user wants to build, deploy, run or operate agents on CloudRaker Run.
+  Any task on cloudraker.run through the rakerun CLI: create a project of agents from templates, write or change an agent (AGENTS.md and agent.yml), deploy it as an HTTPS endpoint, run it and stream the answer, put it in front of people with a front door (web chat, phone, email, Slack, Teams), manage secrets, MCP connectors, tokens, webhooks, Structured Memory records, who can open them (linked records, teams, roles, filing queues) and knowledge folders. Use whenever the user wants to build, deploy, run or operate agents on CloudRaker Run.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -23,13 +23,13 @@ rakerun whoami
 
 `login` and `start` need a sign-in in the browser. Pick the path by where you run:
 
-**On the user's computer** (a terminal, a local agent): run `rakerun login --org <slug>` yourself. It opens the console in a tab and waits on a loopback port. Your output shows a code. Tell the user: "click Connect when the page shows <code>". `rakerun start --name <project> --templates <id,id>` answers the prompts, so no terminal input is needed.
+**On the user's computer** (a terminal, a local agent): run `rakerun login --org <slug> --wait` yourself, in the background. It opens the console in a tab and waits on a loopback port. Your output shows a link and a code. Tell the user: "open <link> and click Connect when the page shows <code>". Keep the command running until it ends. Without a terminal and without `--wait`, the command prints what to do and exits with code 2. `rakerun start --wait --name <project> --templates <id,id>` answers the prompts, so no terminal input is needed.
 
-**Not on the user's computer** (a cloud agent, a sandbox, a container, CI): the browser cannot reach your loopback port and nobody can type at your prompt. Never run `login` or `start` without `--token` there: the command would wait. The CLI detects the missing terminal, prints the page to open and exits with code 2. Do this instead, in three steps:
+**Not on the user's computer** (a cloud agent, a sandbox, a container, CI): the browser cannot reach your loopback port and nobody can type at your prompt. Never use `--wait` there: nobody can approve on your port. Without `--token`, the CLI detects the missing terminal, prints the page to open and exits with code 2. Do this instead, in three steps:
 
 1. Give the user the page and the steps. The page is `<console_url>/cli`; `rakerun login --base-url https://<host>` prints it (exit 2, no wait). Tell them: "Open <console_url>/cli, sign in, click **Create CLI token**, copy the line the page shows (`<org> crr_...`) and paste it here."
 2. Stop and wait for the user. Do not retry, do not poll.
-3. With the line, run `rakerun login --base-url https://<host> --token '<org> crr_...'`. The org comes from the line. Then `rakerun repo list` to verify.
+3. With the line, run `rakerun login --base-url https://<host> --token '<org> crr_...'`. The org comes from the line. Then `rakerun repo list` to verify. For a first project, `rakerun start --token '<org> crr_...' --name <project>` signs in the same way and goes on.
 
 The line is the user's CLI token with every scope of the org. It passes through the chat once. Never print it back, never write it to a file in the repo, and tell the user they can revoke it on the console **Tokens** screen. In CI, `rakerun login --base-url https://<org>.<domain> --token -` reads a `crr_` token from stdin; create one with `rakerun token create ci --scopes run,read` or on the Tokens screen. `--paste` is for a human on a remote shell: it reads the line from the terminal.
 
@@ -76,6 +76,7 @@ rakerun run start linear-triage --input "Triage EGR-123" --stream
 | Start, stream, turns, history, trace, cancel | [rakerun-runs](../rakerun-runs/SKILL.md) |
 | Secrets, `network:` (also `oidc` signed identity), MCP connectors, tokens, webhooks | [rakerun-integrations](../rakerun-integrations/SKILL.md) |
 | Structured Memory records and schemas, `knowledge/` folders | [rakerun-knowledge](../rakerun-knowledge/SKILL.md) |
+| Who can open records: the `access` block, linked records (`takes`, `gives`), teams, roles, filing queues, `rakerun lint --explain` | [rakerun-records](../rakerun-records/SKILL.md) |
 | Set up a new organization, the onboarding checklist | [rakerun-onboarding](../rakerun-onboarding/SKILL.md) |
 
 ## Rules that hold everywhere

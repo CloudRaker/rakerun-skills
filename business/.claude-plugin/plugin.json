@@ -1,0 +1,19 @@
+{
+  "name": "rakerun-business",
+  "displayName": "CloudRaker Run for business",
+  "description": "Skills for an AI agent that builds cloudraker.run for a person who does not use git: sign in, make a change, let the person try it in the console and let a publisher make it live. Record types, linked records and who can open them, teams, a queue for incoming documents, assistants for chat, and a first setup that starts with \"What are you here to build?\".",
+  "version": "0.1.0",
+  "author": {
+    "name": "CloudRaker",
+    "url": "https://www.cloudraker.com"
+  },
+  "homepage": "https://docs.cloudraker.com/run",
+  "repository": "https://github.com/CloudRaker/rakerun-skills",
+  "license": "MIT",
+  "keywords": ["cloudraker", "rakerun", "agents", "records", "no-code", "business"],
+  "skills": [
+    "./skills/rakerun-business",
+    "./skills/rakerun-business-records",
+    "./skills/rakerun-business-onboarding"
+  ]
+}
