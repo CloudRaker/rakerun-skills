@@ -83,7 +83,7 @@ Access through a link stops there. It never continues through a second link. A n
 
 - Delete never passes through a link.
 - To add a link that opens records, a person must be able to change both records. To remove a link, a person must be able to change the record that holds the field.
-- A person who can change an intake can add a lab result that takes from it, when `access.links` of lab results is `write`.
+- A person who can change an intake directly (a table rule, a row rule or a share, not another link) can add a lab result that takes from it, when `access.links` of lab results is `write`.
 - Never put `gives` on a shared record that points back to its cases. One patient would then open every intake of that patient.
 - A `gives` field on a record type that every member can open opens the linked records to every member. `npx rakerun lint` warns about it.
 - A link into a record type with `links: none` opens nothing.
@@ -164,7 +164,7 @@ Admins make changes live. A builder or a member makes changes live only when the
 
 ## Sharing
 
-A person can share one record with a colleague or a team on the record page. The share also opens the records that the shared record opens through its links. The share sheet says so: "Also opens 3 linked records." A person who can open a record only through a link can share it too. Such a share never names the person who shares, or a team of that person.
+A person can share one record with a colleague or a team on the record page. The share also opens the records that the shared record opens through its links. The share sheet says so: "Also opens 3 linked records." A person who can change a record, also only through a link, can share it. Such a share never names the person who shares, or a team of that person. A share never gives more access to the person who made it.
 
 ## A queue for documents
 
