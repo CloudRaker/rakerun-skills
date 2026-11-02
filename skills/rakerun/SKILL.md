@@ -70,6 +70,7 @@ rakerun run start linear-triage --input "Triage EGR-123" --stream
 | Task | Skill |
 | --- | --- |
 | New project, templates, lint, deploy, repo, previews, rollback | [rakerun-projects](../rakerun-projects/SKILL.md) |
+| Environments: one project each for development, staging and production, `env add`, `env list`, `push`, the GitHub Action `CloudRaker/run-deploy` | [rakerun-projects](../rakerun-projects/SKILL.md#environments) |
 | Write or change an agent: prompt, `agent.yml`, triggers, tools | [rakerun-agents](../rakerun-agents/SKILL.md) |
 | Web chat, phone, email, Slack, Teams: front doors, bindings, embed keys, conversations | [rakerun-doors](../rakerun-doors/SKILL.md) |
 | Start, stream, turns, history, trace, cancel | [rakerun-runs](../rakerun-runs/SKILL.md) |

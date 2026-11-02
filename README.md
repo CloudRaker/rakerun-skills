@@ -30,7 +30,7 @@ Or as a Claude Code plugin:
 | Skill | What it covers |
 | --- | --- |
 | [`rakerun`](./skills/rakerun) | Umbrella: install, login, the repo model, the deploy loop, where each task goes |
-| [`rakerun-projects`](./skills/rakerun-projects) | `new`, `template`, `lint`, `deploy`, `repo`, previews, rollbacks |
+| [`rakerun-projects`](./skills/rakerun-projects) | `new`, `template`, `lint`, `deploy`, `repo`, environments (`env`, `push`, the GitHub Action), previews, rollbacks |
 | [`rakerun-agents`](./skills/rakerun-agents) | Writing an agent: `AGENTS.md`, `agent.yml` keys, modes, triggers, tools from the repo, inheritance |
 | [`rakerun-runs`](./skills/rakerun-runs) | Start, stream, turns, history, trace, messages, cancel, the event types, runs against conversations |
 | [`rakerun-doors`](./skills/rakerun-doors) | Front doors (`doors/{name}.yml`): web chat, phone, email, Slack and Teams, guards, router, handoff, limits, bindings, embed keys, conversations |
@@ -41,7 +41,7 @@ Or as a Claude Code plugin:
 ## The house rules these skills teach
 
 1. **A folder with `AGENTS.md` is an agent.** The folder path is the agent name. `agent.yml` is optional and every key has a default.
-2. **`rakerun deploy` is the only way to ship.** It lints, commits everything and pushes. The push is the deploy, all agents or none.
+2. **Ship with `rakerun deploy`, or `rakerun push <env>` for an environment.** `deploy` lints, commits everything and pushes. `push` lints the last commit and pushes it to one project (one project each for development, staging and production). The push is the deploy, all agents or none.
 3. **Lint before you deploy.** `rakerun lint` runs the same rules as the gateway, in a second, with the file, the line and the rule id.
 4. **Secrets are references.** Write `${secret:NAME}`, declare it under `secrets:`, set the value with `rakerun secret set NAME`. A push that holds a value fails.
 5. **Templates first.** `rakerun template list` has 85 agents. Import one and edit it before you write from scratch.
