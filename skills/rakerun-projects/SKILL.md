@@ -59,6 +59,8 @@ The push is the deploy: every agent of the repo or none. A run pins the deployme
 
 Previews: `git checkout -b try-it`, edit, `rakerun deploy`. The branch gets its own host, `https://try-it--acme.cloudraker.run`. A token needs the `preview` scope to call it. Previews never run schedules, email or `_schemas` sync. Deleting the branch drops the preview.
 
+The first branch that a new project gets becomes its default branch, and it deploys live. So `deploy` and `push` refuse the first push of a branch other than `main` to a project with no branch ("<project> has no branch yet", exit 2). Deploy the starter of `rakerun new` on `main` first, then make the branch. `rakerun new` makes no commit, so the folder can have no `main` branch. Then `git switch -c main` copies the current branch, and its deploy makes all of it live, `_schemas` too. Do that only when the user agrees.
+
 `deploy` needs an `origin` at `https://{org}.cloudraker.run/_git/{name}` (from `rakerun new` or `rakerun repo clone`). When `origin` is GitHub or another git host, use environments and `rakerun push`.
 
 ## Environments
@@ -81,6 +83,7 @@ rakerun env add dev acme-agents-dev           # git remote "dev" with the rakeru
 rakerun env add staging acme-agents-staging
 rakerun env add prod acme-agents
 git commit -am "triage: ask for a repro"      # push sends the last commit only
+rakerun push dev --branch main                # the first push of a project: main, and it goes live
 rakerun push dev                              # lint HEAD, push it, print the deploy log
 rakerun push prod --branch main               # deploy live from another local branch
 rakerun env list                              # each environment with its live SHA (--json: full SHA)
@@ -95,6 +98,7 @@ rakerun env list                              # each environment with its live S
 | Force | never | only with `--force` |
 
 - The push goes to the project branch with the name of the current branch. `main` deploys live. Another branch gets a preview of that project only.
+- A project of `repo create` has no branch. Its first push must go to `main`: `push` refuses another branch, also with `--branch`. `rakerun push dev --branch main` makes the last commit live, so push to a production environment that way only when the user asks.
 - Each project has its own base path (the project name by default), so each environment has its own agent URLs: `https://acme.cloudraker.run/acme-agents-dev/triage`. Name the project in run commands: `rakerun run start triage --repo acme-agents-dev`.
 - `env add` refuses a project that does not exist and a remote name in use (`git remote set-url` changes one). It needs `rakerun` on `PATH`: git calls `rakerun git-credential` for the token. With `npx rakerun` only, ask the user to run `npm install -g rakerun`.
 - The remotes live in the git config of the clone, not in the tree. Run `env add` once in each clone.

@@ -59,11 +59,18 @@ Write the plan back in plain words, one line for each record type, and let the u
 
 ## 5. First agents
 
-Suggest at most three templates from `suggestions`, one reason each. Import the ones the user picks:
+Suggest at most three templates from `suggestions`, one reason each. Then make the project and deploy its starter agent on `main` at once. The first branch that a new project gets becomes its live branch, so the first deploy goes live with no approval. Keep that deploy to the starter agent only:
 
 ```bash
-npx rakerun new agents --template <id>          # a new project folder with git and the remote
-npx rakerun template import <id> --dir agents   # more templates in the same folder
+npx rakerun new agents                                  # a new project folder with a starter agent (hello/), git and the remote
+cd agents && npx rakerun deploy -m "Start the project"  # the first deploy: it goes live on main
+```
+
+Do the rest of this step in the `agents` folder, on a branch. Then each deploy of the step goes to a preview, and nothing of it is live. Import the templates that the user picks:
+
+```bash
+git switch -c onboarding
+npx rakerun template import <id>   # one command for each template
 ```
 
 Adapt each `AGENTS.md` to the business from the profile and the lookup summary: names, steps, tone, example inputs. Add a connector to `agent.yml` only when the user confirms the organization uses that service.
@@ -73,14 +80,16 @@ Then write the structure of step 4: one `_schemas/<name>.yml` for each record ty
 Before the deploy, show the user who can open what:
 
 ```bash
-cd agents && npx rakerun lint --explain
+npx rakerun lint --explain
 ```
 
-Tell the user the sentences of each record type, word for word, for example "People who can open an intake can also open its lab results." Ask whether they are right. Change the files and run the command again until the user agrees, and until lint shows no error. Then deploy on a branch, never on `main`, so the change has a preview:
+Tell the user the sentences of each record type, word for word, for example "People who can open an intake can also open its lab results." Ask whether they are right. Change the files and run the command again until the user agrees, and until lint shows no error. Then deploy the `onboarding` branch, never `main`, so the change has a preview:
 
 ```bash
-git switch -c onboarding && npx rakerun deploy -m "First agents"
+npx rakerun deploy -m "First agents"
 ```
+
+When the deploy answers "agents has no branch yet", the deploy of the starter agent on `main` did not occur. Do not deploy this branch on `main`: that makes the templates and the record types live with no approval. Tell the user, and ask what to do.
 
 A preview adds no record types, and it uses the live access rules and links of the project. So the new record types exist only after the user makes the change live (step 7).
 
