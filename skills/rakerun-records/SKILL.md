@@ -62,7 +62,7 @@ How Run decides:
 - **Open.** A table rule (`read` or `write`) names the person. When the table has `rows`, a row rule must also match: the person is in `rows.all`, an owner field names them, or a team field names one of their teams. A share of the record also opens it.
 - **Change.** The same check, with `write`. A change can move a record out of the rows of the person. This is a hand-off.
 - **Delete.** The person needs `delete` and must be able to change the record. A share or a link never gives delete.
-- **Create.** The person needs `write`, and the new record must fall in their rows (or the person is in `rows.all`). A link gives one more way: [create through a link](#link-writes).
+- **Create.** The person needs `write`, and the new record must fall in their rows (or the person is in `rows.all`). A link gives one more way, but such a record cannot give the person direct access: [create through a link](#link-writes).
 - `$creator` is the person who added the record. A background run or an API token adds records with no creator, so such a record matches `$creator` for nobody.
 
 ## Teams
@@ -174,14 +174,16 @@ So a person on one case never sees the other cases of a shared record. Tell the 
 
 The level through a link is the level of the person on the source record. `access.links` of the record type that gets the access caps it: `write` keeps the level, `read` gives read only, `none` gives nothing. Delete never passes through a link.
 
-A write through a link cannot give the person direct access to the record. For example, a person who changes an intake only through a link cannot set its `nurse` field to their own email. Run answers `403 record_forbidden`: "You cannot give yourself access to this record."
+A write through a link cannot give the person direct access to the record. For example, a person who changes an intake only through a link cannot set its `nurse` field to their own email. Run answers `403 record_forbidden`: "You cannot give yourself access to this record." A create through a link has the same limit (see [link writes](#link-writes)).
 
 ### Link writes
 
 - To add a `takes` or `gives` link, the person must be able to change both records: the record that holds the field and the linked record. Direct access and access through a link both count.
 - To remove a link, the person needs only to change the record that holds the field.
 - **Create through a link.** A person who can change a record directly (table rule, row rule or share) can add a record that takes from it. The new record type must have `access.links: write`. The person needs no `write` rule on that record type.
-- A record that a person adds through a link cannot give them direct access: its owner field cannot name them, and its team field cannot name one of their teams. Run answers `403 record_forbidden`: "You cannot give yourself access to a record that you add through a link." Run writes the person as the creator. So when a table rule names the person and the record type has a `$creator` row rule, that person cannot add a record through a link, and the record page shows no "Add" button. Do not use `$creator` on a record type when the people that its table rules name must add its records through a link.
+- A record that a person adds through a link cannot give them direct access. This limit applies only when a `read` rule names the person, no `write` rule names them, and a row rule decides which records they open. Then:
+  - An owner field of the new record cannot name them, and a team field cannot name one of their teams. Run answers `403 record_forbidden`: "You cannot give yourself access to a record that you add through a link." The "Add" sheet of the record page fills in only the link, not the owner or team fields.
+  - A `$creator` row rule always names them, because Run writes the person as the creator. So they cannot add a record of that type through a link, and the record page shows no "Add" button. Do not use `$creator` on a record type when people who can only read it must add its records through a link.
 - A refused link names the linked record only for a person who can open it: "You cannot link this lab result to Intake INT-7. You cannot change that intake."
 - Run checks the records of a link write again after the write. When one of them changed in the meantime, Run removes the link that it added at once and decides again, at most 3 times. Then it answers `409 record_changed`: "This record changed while you saved. Try again." Read the records again before you try again.
 

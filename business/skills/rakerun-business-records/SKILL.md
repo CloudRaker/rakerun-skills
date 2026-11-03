@@ -84,6 +84,7 @@ Access through a link stops there. It never continues through a second link. A n
 - Delete never passes through a link.
 - To add a link that opens records, a person must be able to change both records. To remove a link, a person must be able to change the record that holds the field.
 - A person who can change an intake directly (a table rule, a row rule or a share, not another link) can add a lab result that takes from it, when `access.links` of lab results is `write`.
+- A lab result that a person adds this way cannot give them direct access. This matters when the person can only read lab results and a row rule decides which ones they see. Then its owner field cannot name them, and its team field cannot name their team. With `rows.owner: $creator`, they cannot add a lab result this way, because Run makes them its creator.
 - Never put `gives` on a shared record that points back to its cases. One patient would then open every intake of that patient.
 - A `gives` field on a record type that every member can open opens the linked records to every member. `npx rakerun lint` warns about it.
 - A link into a record type with `links: none` opens nothing.
