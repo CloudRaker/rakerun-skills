@@ -9,7 +9,7 @@ allowed-tools:
 
 # Writing an agent
 
-Reference: https://docs.cloudraker.com/run/guides/agent-yml and https://docs.cloudraker.com/run/guides/repo-layout. Check `rakerun lint` after every edit.
+Reference: https://cloudraker-run.docs.buildwithfern.com/guides/agent-yml and https://cloudraker-run.docs.buildwithfern.com/guides/repo-layout. Check `rakerun lint` after every edit.
 
 ## The folder model
 
@@ -134,7 +134,7 @@ network:
 | `user_identity_no_person` | warning | Every trigger of the agent has no person (schedule, inbound, phone, email), and a connector has `identity: user`. |
 | `api_security_header`     | warning | An `_apis` file needs a header that `network:` lacks. An `oidc` header counts as supplied                         |
 
-Reference: https://docs.cloudraker.com/run/guides/oidc-identity.
+Reference: https://cloudraker-run.docs.buildwithfern.com/guides/oidc-identity.
 
 ## Agents that work together (`agents`)
 

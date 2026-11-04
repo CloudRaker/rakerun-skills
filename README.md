@@ -1,13 +1,13 @@
 # CloudRaker Run skills
 
-Agent skills for [cloudraker.run](https://docs.cloudraker.com/run) and its `rakerun` CLI, in the [Agent Skills](https://agentskills.io) format. Available as plugins for Claude Code and OpenAI Codex.
+Agent skills for [cloudraker.run](https://cloudraker-run.docs.buildwithfern.com) and its `rakerun` CLI, in the [Agent Skills](https://agentskills.io) format. Available as plugins for Claude Code and OpenAI Codex.
 
 This repository holds two skill packs:
 
-| Pack | Plugin | Folder | For |
-| --- | --- | --- | --- |
-| Developer | `rakerun` | [`skills/`](./skills) | Coding agents: git, `agent.yml`, YAML and the `rakerun` CLI |
-| Business | `rakerun-business` | [`business/`](./business) | Business builders: the agent does the steps, the person tries each change in the console |
+| Pack      | Plugin             | Folder                    | For                                                                                      |
+| --------- | ------------------ | ------------------------- | ---------------------------------------------------------------------------------------- |
+| Developer | `rakerun`          | [`skills/`](./skills)     | Coding agents: git, `agent.yml`, YAML and the `rakerun` CLI                              |
+| Business  | `rakerun-business` | [`business/`](./business) | Business builders: the agent does the steps, the person tries each change in the console |
 
 ## Install the CLI
 
@@ -17,7 +17,9 @@ rakerun start               # sign up, create the org, a project from templates,
 rakerun login --org acme    # an existing org
 ```
 
-`rakerun login` opens the browser. You approve the connection on the console page (it shows the same code as the terminal) and the token comes back to the terminal on its own. Use `--paste` on a remote shell, or `--token -` to read a token from stdin in CI. An agent in a sandbox asks you for the line the `/cli` page shows and passes it as `--token '<org> crr_...'`.
+`rakerun login` opens the browser. Compare the console and terminal codes before you approve the connection. The token returns directly to the terminal.
+Use `--paste` on a remote shell, or `--token -` to read a token from stdin in CI.
+Paste the `/cli` line directly into the waiting terminal. Never paste it into a coding agent's chat.
 
 ## Install the skills
 
@@ -34,6 +36,20 @@ npx skills add https://github.com/CloudRaker/rakerun-skills/tree/main/skills --s
 npx skills add https://github.com/CloudRaker/rakerun-skills/tree/main/business --skill '*'   # business
 ```
 
+Choose your coding agent explicitly when needed:
+
+```bash
+npx skills add CloudRaker/rakerun-skills --agent claude-code
+npx skills add CloudRaker/rakerun-skills --agent codex
+npx skills add CloudRaker/rakerun-skills --agent cursor
+```
+
+The installer adds project skills for Cursor. It does not require a separate rules file.
+Copy the setup prompt from the toast at the bottom right of the [Run console](https://run.cloudraker.com/agent-setup).
+To reopen it, select **Connect your agent** in the account menu. Your coding agent handles setup.
+CLI token creation requires an administrator. Every role can read the instructions.
+Run uses this CLI and skills. The server at `mcp.cloudraker.com` serves Paperwork and Workspace.
+
 Or as a Claude Code plugin:
 
 ```
@@ -44,17 +60,17 @@ Or as a Claude Code plugin:
 
 ## Developer pack
 
-| Skill | What it covers |
-| --- | --- |
-| [`rakerun`](./skills/rakerun) | Umbrella: install, login, the repo model, the deploy loop, where each task goes |
-| [`rakerun-projects`](./skills/rakerun-projects) | `new`, `template`, `lint`, `deploy`, `repo`, environments (`env`, `push`, the GitHub Action), previews, rollbacks |
-| [`rakerun-agents`](./skills/rakerun-agents) | Writing an agent: `AGENTS.md`, `agent.yml` keys, modes, triggers, tools from the repo, inheritance |
-| [`rakerun-runs`](./skills/rakerun-runs) | Start, stream, turns, history, trace, messages, cancel, the event types, runs against conversations |
-| [`rakerun-doors`](./skills/rakerun-doors) | Front doors (`doors/{name}.yml`): web chat, phone, email, Slack and Teams, guards, router, handoff, limits, bindings, embed keys, conversations |
-| [`rakerun-integrations`](./skills/rakerun-integrations) | Secrets and `network:`, MCP connectors, tokens, webhooks |
-| [`rakerun-knowledge`](./skills/rakerun-knowledge) | Structured Memory (`_schemas/`, `data:`, records) and `knowledge/` folders |
-| [`rakerun-records`](./skills/rakerun-records) | Who can open records: the `access` block, relation fields (`takes`, `gives`, `access.links`, one link and no further), people teams, the three roles, filing queues with `data.file`, `rakerun lint --explain` |
-| [`rakerun-onboarding`](./skills/rakerun-onboarding) | Set up an organization from sign-in to a first tested agent, with the console checklist |
+| Skill                                                   | What it covers                                                                                                                                                                                                 |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`rakerun`](./skills/rakerun)                           | Umbrella: install, login, the repo model, the deploy loop, where each task goes                                                                                                                                |
+| [`rakerun-projects`](./skills/rakerun-projects)         | `new`, `template`, `lint`, `deploy`, `repo`, environments (`env`, `push`, the GitHub Action), previews, rollbacks                                                                                              |
+| [`rakerun-agents`](./skills/rakerun-agents)             | Writing an agent: `AGENTS.md`, `agent.yml` keys, modes, triggers, tools from the repo, inheritance                                                                                                             |
+| [`rakerun-runs`](./skills/rakerun-runs)                 | Start, stream, turns, history, trace, messages, cancel, the event types, runs against conversations                                                                                                            |
+| [`rakerun-doors`](./skills/rakerun-doors)               | Front doors (`doors/{name}.yml`): web chat, phone, email, Slack and Teams, guards, router, handoff, limits, bindings, embed keys, conversations                                                                |
+| [`rakerun-integrations`](./skills/rakerun-integrations) | Secrets and `network:`, MCP connectors, tokens, webhooks                                                                                                                                                       |
+| [`rakerun-knowledge`](./skills/rakerun-knowledge)       | Structured Memory (`_schemas/`, `data:`, records) and `knowledge/` folders                                                                                                                                     |
+| [`rakerun-records`](./skills/rakerun-records)           | Who can open records: the `access` block, relation fields (`takes`, `gives`, `access.links`, one link and no further), people teams, the three roles, filing queues with `data.file`, `rakerun lint --explain` |
+| [`rakerun-onboarding`](./skills/rakerun-onboarding)     | Set up an organization from sign-in to a first tested agent, with the console checklist                                                                                                                        |
 
 ### The house rules of the developer pack
 
@@ -67,10 +83,10 @@ Or as a Claude Code plugin:
 
 ## Business pack
 
-| Skill | What it covers |
-| --- | --- |
-| [`rakerun-business`](./business/skills/rakerun-business) | Sign-in, the words to use, the steps of a change (check, save, try, make it live), assistants for chat, errors in plain words |
-| [`rakerun-business-records`](./business/skills/rakerun-business-records) | Record types, "Linked to" fields and the direction in which they open records, who can open what, teams, roles, sharing, a queue for incoming documents |
-| [`rakerun-business-onboarding`](./business/skills/rakerun-business-onboarding) | A first setup: the profile, "What are you here to build?", the structure, the access sentences, the first try |
+| Skill                                                                          | What it covers                                                                                                                                          |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`rakerun-business`](./business/skills/rakerun-business)                       | Sign-in, the words to use, the steps of a change (check, save, try, make it live), assistants for chat, errors in plain words                           |
+| [`rakerun-business-records`](./business/skills/rakerun-business-records)       | Record types, "Linked to" fields and the direction in which they open records, who can open what, teams, roles, sharing, a queue for incoming documents |
+| [`rakerun-business-onboarding`](./business/skills/rakerun-business-onboarding) | A first setup: the profile, "What are you here to build?", the structure, the access sentences, the first try                                           |
 
 The agent does every step. The person answers in plain words, tries each change in the console, and a publisher selects "Make it live". The agent never says git words to the person. See [business/README.md](./business/README.md).

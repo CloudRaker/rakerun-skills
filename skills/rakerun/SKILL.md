@@ -27,11 +27,13 @@ rakerun whoami
 
 **Not on the user's computer** (a cloud agent, a sandbox, a container, CI): the browser cannot reach your loopback port and nobody can type at your prompt. Never use `--wait` there: nobody can approve on your port. Without `--token`, the CLI detects the missing terminal, prints the page to open and exits with code 2. Do this instead, in three steps:
 
-1. Give the user the page and the steps. The page is `<console_url>/cli`; `rakerun login --base-url https://<host>` prints it (exit 2, no wait). Tell them: "Open <console_url>/cli, sign in, click **Create CLI token**, copy the line the page shows (`<org> crr_...`) and paste it here."
-2. Stop and wait for the user. Do not retry, do not poll.
-3. With the line, run `rakerun login --base-url https://<host> --token '<org> crr_...'`. The org comes from the line. Then `rakerun repo list` to verify. For a first project, `rakerun start --token '<org> crr_...' --name <project>` signs in the same way and goes on.
+1. Use a protected credential input if the environment provides one. Never ask for a token in chat.
+2. If no protected input exists, ask the user to run the CLI on their own computer. Do not retry or poll for credentials.
+3. In CI, pass a token from the secret store to `rakerun login --base-url https://<org>.<domain> --token -` through stdin.
 
-The line is the user's CLI token with every scope of the org. It passes through the chat once. Never print it back, never write it to a file in the repo, and tell the user they can revoke it on the console **Tokens** screen. In CI, `rakerun login --base-url https://<org>.<domain> --token -` reads a `crr_` token from stdin; create one with `rakerun token create ci --scopes run,read` or on the Tokens screen. `--paste` is for a human on a remote shell: it reads the line from the terminal.
+The `/cli` line contains a token with every scope of the org. Never print it or write it to the repository.
+The user can revoke it on the console **Tokens** screen. Use only the scopes a CI job needs, such as `run,read`.
+`--paste` is for a person on a remote shell. Paste the line directly into the waiting terminal, never into chat.
 
 Profiles: one per org host in `~/.config/rakerun/config.json`. `rakerun profile list`, `rakerun profile use <name>`, `--profile <name>` on any command. `--base-url https://acme.cloudraker.run` targets another host.
 
@@ -67,17 +69,17 @@ rakerun run start linear-triage --input "Triage EGR-123" --stream
 
 ## Where each task goes
 
-| Task | Skill |
-| --- | --- |
-| New project, templates, lint, deploy, repo, previews, rollback | [rakerun-projects](../rakerun-projects/SKILL.md) |
+| Task                                                                                                                                             | Skill                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| New project, templates, lint, deploy, repo, previews, rollback                                                                                   | [rakerun-projects](../rakerun-projects/SKILL.md)              |
 | Environments: one project each for development, staging and production, `env add`, `env list`, `push`, the GitHub Action `CloudRaker/run-deploy` | [rakerun-projects](../rakerun-projects/SKILL.md#environments) |
-| Write or change an agent: prompt, `agent.yml`, triggers, tools | [rakerun-agents](../rakerun-agents/SKILL.md) |
-| Web chat, phone, email, Slack, Teams: front doors, bindings, embed keys, conversations | [rakerun-doors](../rakerun-doors/SKILL.md) |
-| Start, stream, turns, history, trace, cancel | [rakerun-runs](../rakerun-runs/SKILL.md) |
-| Secrets, `network:` (also `oidc` signed identity), MCP connectors, tokens, webhooks | [rakerun-integrations](../rakerun-integrations/SKILL.md) |
-| Structured Memory records and schemas, `knowledge/` folders | [rakerun-knowledge](../rakerun-knowledge/SKILL.md) |
-| Who can open records: the `access` block, linked records (`takes`, `gives`), teams, roles, filing queues, `rakerun lint --explain` | [rakerun-records](../rakerun-records/SKILL.md) |
-| Set up a new organization, the onboarding checklist | [rakerun-onboarding](../rakerun-onboarding/SKILL.md) |
+| Write or change an agent: prompt, `agent.yml`, triggers, tools                                                                                   | [rakerun-agents](../rakerun-agents/SKILL.md)                  |
+| Web chat, phone, email, Slack, Teams: front doors, bindings, embed keys, conversations                                                           | [rakerun-doors](../rakerun-doors/SKILL.md)                    |
+| Start, stream, turns, history, trace, cancel                                                                                                     | [rakerun-runs](../rakerun-runs/SKILL.md)                      |
+| Secrets, `network:` (also `oidc` signed identity), MCP connectors, tokens, webhooks                                                              | [rakerun-integrations](../rakerun-integrations/SKILL.md)      |
+| Structured Memory records and schemas, `knowledge/` folders                                                                                      | [rakerun-knowledge](../rakerun-knowledge/SKILL.md)            |
+| Who can open records: the `access` block, linked records (`takes`, `gives`), teams, roles, filing queues, `rakerun lint --explain`               | [rakerun-records](../rakerun-records/SKILL.md)                |
+| Set up a new organization, the onboarding checklist                                                                                              | [rakerun-onboarding](../rakerun-onboarding/SKILL.md)          |
 
 ## Rules that hold everywhere
 

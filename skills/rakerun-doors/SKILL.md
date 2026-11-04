@@ -9,7 +9,7 @@ allowed-tools:
 
 # Front doors and conversations
 
-Reference: https://docs.cloudraker.com/run/guides/front-doors and https://docs.cloudraker.com/run/guides/doors-yml. Check `rakerun lint` after every edit.
+Reference: https://cloudraker-run.docs.buildwithfern.com/guides/front-doors and https://cloudraker-run.docs.buildwithfern.com/guides/doors-yml. Check `rakerun lint` after every edit.
 
 A front door is a file `doors/{name}.yml` at the root of a Run repo. It says how people reach the agents of the repo. Its id is `{repo}/{name}`. A person who comes in through a door starts a **conversation** (`cv_...`). The conversation starts runs for the agents of the door.
 

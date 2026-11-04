@@ -43,7 +43,7 @@ network:
 - `identity: user` needs a verified org member in the turn (console, team apps, mapped Slack or Teams sender). A mention run in a console conversation with no sender names the conversation owner. Schedules, webhooks, phone, email, web chat visitors and API tokens have none. Then a fetch, `_apis` or `_code` request fails with `identity_unavailable`. An MCP server or connector cannot list its tools, so its tools are missing from the turn.
 - Audit rows show `oidc:agent` or `oidc:user` as the secret name. Never the token.
 
-Full guide and a `jose` verification example: https://docs.cloudraker.com/run/guides/oidc-identity.
+Full guide and a `jose` verification example: https://cloudraker-run.docs.buildwithfern.com/guides/oidc-identity.
 
 ## MCP connectors
 
