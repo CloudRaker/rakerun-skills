@@ -297,7 +297,7 @@ Run has three roles. An admin gives **Can build** (role `builder`) in **Settings
 - **Member.** A member uses only the work pages and the agents that they can call. An agent is callable when it has `triggers.chat` and its `audience` includes the person. Other pages answer 404.
 - `access.publishers` in the root `agent.yml` lists `admins` and the emails of the people who make changes live.
 - In WorkOS, `builder` is an environment role with no permissions. The role priority is admin, builder, member.
-- A `crr_` token with the `admin` scope acts as an admin with no email and no teams. So it passes only the rules that name `admins` or `members`. A `read` or `run` token opens directly only the record types with `members` in `read` and no `rows`.
+- A `crk_` key with the `admin` scope acts as an admin with no email and no teams. So it passes only the rules that name `admins` or `members`. A `read` or `run` token opens directly only the record types with `members` in `read` and no `rows`.
 
 ```yaml
 # intake-assistant/agent.yml: an agent that nurses and triage call from the console

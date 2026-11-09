@@ -75,7 +75,6 @@ events: # leaf-only; each becomes a tool emit_{name}, the caller sees event.{nam
 webhooks: # leaf-only
   - url: https://ops.example.com/hooks
     events: [run.completed, run.failed, event.label_suggested]
-    signing_secret: '${secret:HOOK_SECRET}'
 network: # default deny; every host the agent reaches
   api.linear.app:
     headers: { Authorization: '${secret:LINEAR_TOKEN}' } # secrets are filled here, and only here
@@ -90,7 +89,6 @@ connectors: [linear] # named MCP connectors of the org (see rakerun-integrations
 #     identity: user               # only for a Run identity (OIDC) connector; default agent
 secrets: # declare every name you reference, else secret_undeclared
   LINEAR_TOKEN: { overridable: true } # a run request may send a value for one turn
-  HOOK_SECRET: {}
   LINEAR_WEBHOOK_SECRET: {}
 limits: { max_steps: 60, max_code_calls: 40, code_cpu_ms: 30000, max_egress_bytes: 50MB }
 data: { read: [lead], write: [lead], create_schemas: false } # Structured Memory access
@@ -271,7 +269,7 @@ The tool is on in every mode, also `zeroshot`. `tools.flag: off` removes it. The
 A run can work on one record, its focus. It then reads and changes only the focus and the records that the focus passes access to (see [rakerun-records](../rakerun-records/SKILL.md#linked-records)). The rules of the person and the `data` grant of the agent still apply.
 
 - **Ask an agent** on a record page starts a conversation on that record. It lists the agents with `triggers.chat`, the person in their audience and a `data` grant on the record type. The conversation shows "Working on Intake INT-0042".
-- An API caller with a `crr_` token sends the focus in the body of `POST /{base}/{agent}`: `{"input": "...", "focus": {"schema": "intake", "id": "INT-0042"}}`. The `data` read grant of the agent on the focus record type decides. An anonymous or Cloudflare Access caller that sends `focus` gets `400 invalid_body`.
+- An API caller with a `crk_` key sends the focus in the body of `POST /{base}/{agent}`: `{"input": "...", "focus": {"schema": "intake", "id": "INT-0042"}}`. The `data` read grant of the agent on the focus record type decides. An anonymous or Cloudflare Access caller that sends `focus` gets `400 invalid_body`.
 - A caller who cannot open the focus gets `404 record_not_found`, and no run starts.
 - A run on a lab result does not open its intake. Access passes from the intake to the lab result, not back.
 - A new record must belong to the focus. When its record type has a `takes` field to the focus record type, Run fills it. When the focus record type has a `gives` field to its record type, Run adds the new id to the focus. Another create answers `focus_create`.

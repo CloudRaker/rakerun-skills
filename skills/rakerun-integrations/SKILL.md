@@ -75,21 +75,21 @@ Writes, logins and grants need the admin role (a token with the `admin` scope). 
 ## Tokens
 
 ```bash
-rakerun token list                                            # id, name, hint, scopes, agents, expiry, last used
-rakerun token create ci --scopes run,read                     # value printed once
-rakerun token create triage-only --scopes run,read --agents linear-triage --expires 2026-12-31T00:00:00Z
-rakerun token revoke tok_01…
+rakerun token create --name ci --scopes run,read   # opens the /cli page, saves the crk_ key as the profile "ci"
+rakerun token list                                 # prints the URL of the Dash page of API keys
 ```
 
-Scopes: `run` (start and turns), `read` (runs and events), `cancel`, `git` (push and clone), `secrets` (the `/_secrets` API), `admin` (the console API as an admin: secrets, connectors, tokens, data writes), `preview` (preview hosts), `act_as` (`x-run-as`). The CLI itself needs `admin` for writes, `read` for reads. A caller of an agent needs `run` and `read`. Never paste a token into a repo file or a chat message.
+Dash holds the other key actions: the list of keys, revocation, an agent list and an expiry (`https://dash.cloudraker.com/api-keys`). `rakerun token revoke` only prints this URL and exits with code 2. Only an organization admin can create a key.
+
+Scopes: `run` (start and turns), `read` (runs and events), `cancel`, `git` (push and clone), `secrets` (the `/_secrets` API), `admin` (the console API as an admin: secrets, connectors, data writes), `preview` (preview hosts), `act_as` (`x-run-as`). The CLI itself needs `admin` for writes, `read` for reads. A caller of an agent needs `run` and `read`. Never paste a token into a repo file or a chat message.
 
 ## Webhooks
 
-Declared per agent under `webhooks:` (URL, events, `signing_secret`). Deliveries retry with backoff; dead ones stay listed.
+Declared per agent under `webhooks:` (URL, events). A webhook needs no secret. Deliveries retry with backoff; dead ones stay listed.
 
 ```bash
 rakerun webhook list --status failed --limit 50     # run, event type, url, attempt, status, http status, next try
 rakerun webhook retry run_01… --event evt_01… --url https://ops.example.com/hooks
 ```
 
-The receiver verifies the `v1` signature with the signing secret; two secrets are allowed during a rotation.
+The receiver verifies the JWT in `x-cr-signature` with `https://{org}.cloudraker.run/.well-known/jwks.json` (RS256). It checks `iss`, `aud` (the webhook URL), `exp` and `body_sha256` (the SHA-256 of the raw body, in lowercase hex). It de-duplicates on `jti`, the event `id`.

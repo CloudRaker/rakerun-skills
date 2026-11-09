@@ -75,4 +75,8 @@ A **conversation** (`cv_...`) is one exchange with one person through a front do
 
 ## From code
 
-The CLI uses the console API with your profile token. An integration calls the public endpoint with a `run`-scoped token: `POST https://{org}.cloudraker.run/{repo}/{agent}` with `Authorization: Bearer crr_…`, `Accept: text/event-stream` for the stream, body `{ "input": …, "metadata": {…}, "secrets": {…} }`. The answer carries `x-run-id` and a read token `rrt_…` for `GET /_run/{id}`. Create the token with `rakerun token create <name> --scopes run,read --agents linear-triage`.
+The CLI uses the console API with your profile token. An integration calls the public endpoint with a `run`-scoped `crk_` key: `POST https://{org}.cloudraker.run/{repo}/{agent}` with `Authorization: Bearer crk_…`, `Accept: text/event-stream` for the stream, body `{ "input": …, "metadata": {…}, "secrets": {…} }`. The answer carries `x-run-id` and a read token `rrt_…` for `GET /_run/{id}`.
+
+Create the key of an integration on the API keys page of Dash (`https://dash.cloudraker.com/api-keys`). Select the Live environment, because Run refuses a test key. Select only the scopes `run` and `read`. Give the agent list as full paths, one on each line (`{repo}/{agent}`). An empty list allows every agent. You cannot change the list after you create the key. Dash shows the value of a live key once, so put it in the secrets manager of the integration.
+
+`rakerun token create --name <name> --scopes run,read` is only for a CLI profile on the same computer. It saves the key as the profile `<name>` (use it with `--profile <name>`) and prints only a hint, not the value. It cannot set an agent list.

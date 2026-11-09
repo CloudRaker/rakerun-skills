@@ -137,7 +137,7 @@ rakerun embed revoke rek_...                                           # its ope
 <cloudraker-chat base-url="https://acme.cloudraker.run" embed-key="rek_..."></cloudraker-chat>
 ```
 
-React: `import { RunChat } from '@cloudraker/run-embed/react'`. An embed key is public and works only from `channels.web.origins`. The chat runs a Turnstile check, then holds a `cvs_` session token for one conversation. The browser never gets a `crr_` token. Theme, gate (a notice to accept), greeting, files and custom events are under `channels.web`.
+React: `import { RunChat } from '@cloudraker/run-embed/react'`. An embed key is public and works only from `channels.web.origins`. The chat runs a Turnstile check, then holds a `cvs_` session token for one conversation. The browser never gets a `crk_` key. Theme, gate (a notice to accept), greeting, files and custom events are under `channels.web`.
 
 ## Test and operate
 

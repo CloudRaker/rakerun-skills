@@ -84,7 +84,7 @@ rakerun run start linear-triage --input "Triage EGR-123" --stream
 ## Rules that hold everywhere
 
 - **Never write a secret value into the repo.** Write `${secret:NAME}` and `rakerun secret set NAME` (value prompted or on stdin). A push with a value fails with `secret_value`.
-- **Never edit a token.** `rakerun token create` shows the value once. Store it where the user asks, never in the repo.
+- **Never edit a token.** `rakerun token create` saves the key as a local profile and prints only a hint. A key for another system comes from the API keys page of Dash (`https://dash.cloudraker.com/api-keys`). Dash shows a live key once. Store it where the user asks, never in the repo.
 - **`--json` on every command** gives the raw API answer. Use it when you need ids.
 - **`run_access_required` (403)** means the org is on the waitlist. See [Early access and the waitlist](#early-access-and-the-waitlist).
 - **Exit codes:** 0 ok, 1 API or runtime error, 2 usage. The message names the API error code (`not_found`, `forbidden`, `invalid_body` with details).

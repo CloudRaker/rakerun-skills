@@ -15,7 +15,7 @@ The console has an onboarding checklist per organization. You drive the same che
 
 ```bash
 npx rakerun login --org <slug> --wait   # on the user's computer, in the background: prints a link and a code, then waits
-npx rakerun login --base-url https://<host> --token '<org> crr_...'   # in the cloud: the line the user copied from the /cli page
+npx rakerun login --base-url https://<host> --token '<org> crk_...'   # in the cloud: the line the user copied from the /cli page
 ```
 
 On the user's computer, give the user the link and the code from your output. Ask them to click Connect when the page shows the same code, and keep the command running until it ends. In the cloud (a sandbox, a container), never run `login` without `--token`, and never with `--wait`: it cannot finish. Ask the user to open `<console_url>/cli`, click **Create CLI token** and paste the line here, then log in with `--token`. Never print the token back and never write it to a file. See the sign-in section of the `rakerun` skill.
