@@ -1,6 +1,6 @@
 {
   "name": "rakerun",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Skills for cloudraker.run and its rakerun CLI: create projects from templates, write agents, deploy, run and stream, front doors and conversations (web chat, phone, email, Slack, Teams), secrets and MCP connectors, Structured Memory, who can open records (linked records, teams, roles, filing queues) and knowledge folders.",
   "skills": "./skills",
   "author": {

@@ -1,7 +1,7 @@
 ---
 name: rakerun-runs
 description: |
-  Run cloudraker.run agents from the rakerun CLI: start a run with text or JSON input, stream the events, send turns and answers, list and filter the history, read a run, its trace and its messages, cancel. Explains runs against conversations. Use when the user wants to test, call or debug an agent.
+  Run cloudraker.run agents from the rakerun CLI: start a run with text or JSON input, stream the events, send turns and answers, list and filter the history, read a run, its trace and its messages, cancel. Explains runs against conversations, and how to run, answer and debug a machine agent (mode: machine). Use when the user wants to test, call or debug an agent.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -28,7 +28,7 @@ A lead that delegated ends its turn with `turn.completed` reason `children` and 
 
 ## Turns
 
-A `mode: turns` agent ends each turn in `waiting`. Send the next one:
+A `mode: turns` agent ends each turn in `waiting`. A `mode: machine` agent waits in the same way for an answer or an input. Send the next one:
 
 ```bash
 rakerun run turn run_01… --input "Yes, close it" --stream
@@ -50,7 +50,7 @@ rakerun run show run_01…                     # status, turn, deployment sha, u
 rakerun run cancel run_01…
 ```
 
-Statuses: `queued`, `running`, `waiting`, `completed`, `failed`, `cancelled`, `expired`. Failure codes: `model_error`, `timeout`, `step_limit`, `secret_missing`, `egress_denied`, `connector_unavailable`, `code_error`, `output_schema`, `concurrency_limited`, `credits_exhausted`, `insufficient_ai_credits`.
+Statuses: `queued`, `running`, `waiting`, `completed`, `failed`, `cancelled`, `expired`. Failure codes: `model_error`, `timeout`, `step_limit`, `secret_missing`, `egress_denied`, `connector_unavailable`, `code_error`, `output_schema`, `concurrency_limited`, `credits_exhausted`, `insufficient_ai_credits`, and for machine agents `machine_held`, `machine_error`, `machine_tools_changed`.
 
 ## Debug
 
@@ -61,6 +61,27 @@ rakerun run show run_01… --json | jq .usage   # tokens, model steps, code call
 ```
 
 Read the trace first on a failed run: the failing span carries the error. `secret_missing` means `rakerun secret set NAME`; `egress_denied` means the host is not under `network:`; `connector_unavailable` means `rakerun connector list` shows the connector missing, not granted, or not `connected`.
+
+## Machine agents
+
+A `mode: machine` agent (see [rakerun-agents](../rakerun-agents/SKILL.md#machine-agents-mode-machine)) runs like other agents. Start it from the CLI, the API or a trigger. The console does not list it as a chat target in this beta.
+
+```bash
+rakerun run start ap/invoice-intake --input "File this invoice" --stream             # input is user_message
+rakerun run start ap/invoice-intake --data '{"vendor": "Acme", "po": "PO-7"}' --stream # each key is a procedure input
+```
+
+- Each tool call of the Machine is one `run.progress` work row (call id `mc_<seq>`) and one tool span. A model, decide or code step of the engine is one `machine` span in `rakerun run trace`.
+- An `ask` step or a failed step that reaches a person sends a `question` with the id `mq_<seq>` and opens an Inbox item. Answer it with the question id: `rakerun run turn run_01… --question mq_12 --data '"billing"'`. A value that does not match the answer schema does not end the wait: the run sends a message and keeps waiting.
+- An `await` step waits for a later input: `rakerun run turn run_01… --input "Here is the PO number: PO-7"`.
+- A gated call waits for an approval. A person approves or denies it in the console or the Inbox. A denied call gives the step the error `approval_denied`.
+- The run completes on `done`, `refused` and `aborted`. The report is the last `message`, and the result is `{outcome, report, machine: {run_id, ir_hash}}`. Check `result.outcome`: a refused claim is a completed run.
+- A waiting machine run expires after `idle_ttl` (7d by default). `timeout` (60m by default) limits one turn.
+- `rakerun run cancel` also stops the Machine. A done write is not undone: the trace lists the calls that ran.
+
+Failure codes of machine runs: `machine_held` (a `hold` step, or an error that the procedure holds; the Inbox item has the reason), `machine_error` (the engine stopped, or the Machine service was not available) and `machine_tools_changed` (a pinned MCP tool changed since the deploy; copy the new contract into `machine.tools.json` and deploy again). A machine run is billed by the Run meter (minutes), as other runs.
+
+A machine agent cannot take an agent message: `message_agent` to its run answers `not_turn_based`.
 
 ## Runs and conversations
 

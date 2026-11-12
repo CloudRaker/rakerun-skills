@@ -1,7 +1,7 @@
 ---
 name: rakerun-agents
 description: |
-  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, model, triggers, limits, network with oidc identity, secrets, connectors, data, knowledge, tools, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions), the flag tool, runs on one record and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run. For web chat, phone, email, Slack or Teams, use rakerun-doors.
+  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, machine, model, triggers, limits, network with oidc identity, secrets, connectors, data, knowledge, tools, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions), the flag tool, runs on one record, machine agents (mode: machine, machine.json procedures, machine.tools.json pins, effects) and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run. For web chat, phone, email, Slack or Teams, use rakerun-doors.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -28,7 +28,7 @@ my-agents/
     _code/label.ts
 ```
 
-Rules: a folder with `AGENTS.md` is an agent (R1); names match `[a-z0-9][a-z0-9-]{0,62}`, names with `_` are reserved (R2); an agent folder cannot hold another agent (R8, `nested_agent`); `knowledge/` never holds an agent (R10); `doors/` holds the front doors and never an agent (R11, see [rakerun-doors](../rakerun-doors/SKILL.md)). Lists in `agent.yml` (`connectors`, `data.read`, `knowledge`, `model.fallback`) replace the parent list, maps deep-merge, scalars take the leaf. A root `agent.yml` cannot set a leaf-only key (`root_leaf_key`): `name`, `mode`, `idle_ttl`, `triggers`, `output_schema`, `events`, `webhooks`, `protection`, `workspace_act_as`, `agents`.
+Rules: a folder with `AGENTS.md` is an agent (R1); names match `[a-z0-9][a-z0-9-]{0,62}`, names with `_` are reserved (R2); an agent folder cannot hold another agent (R8, `nested_agent`); `knowledge/` never holds an agent (R10); `doors/` holds the front doors and never an agent (R11, see [rakerun-doors](../rakerun-doors/SKILL.md)). Lists in `agent.yml` (`connectors`, `data.read`, `knowledge`, `model.fallback`) replace the parent list, maps deep-merge, scalars take the leaf. A root `agent.yml` cannot set a leaf-only key (`root_leaf_key`): `name`, `mode`, `machine`, `idle_ttl`, `triggers`, `output_schema`, `events`, `webhooks`, `protection`, `workspace_act_as`, `agents`.
 
 ## AGENTS.md
 
@@ -50,8 +50,8 @@ Built-in tools every agent has: `message` (text to the caller), `done` (the resu
 
 ```yaml
 name: Linear triage # display name, leaf-only
-mode: zeroshot # zeroshot (one request, one run) | turns (caller sends turns; ask tool; idle_ttl)
-idle_ttl: 24h # turns only, 1m to 30d
+mode: zeroshot # zeroshot (one request, one run) | turns (caller sends turns; ask tool; idle_ttl) | machine (see below)
+idle_ttl: 24h # turns and machine only, 1m to 30d
 retention: 30d # runs, events, files, 1m to 90d (1m: zero data retention)
 timeout: 10m # one turn, 10s to 60m
 model:
@@ -225,6 +225,7 @@ Tool errors: `delegate` answers `agent_not_allowed`, `delegate_depth`, `delegate
 | `agents_delegate_cycle`   | warning | The `delegate` entries form a cycle. A run refuses it with `delegate_cycle`                               |
 | `agents_message_zeroshot` | warning | A `message` target is a `zeroshot` agent. The message always fails                                        |
 | `agents_root_limits`      | warning | A `delegate` target sets `max_depth`, `messages_per_tree` or `tree_credits`. Only the root run reads them |
+| `machine_target`          | error   | A `delegate` or `message` entry (also through `'*'`) names a `mode: machine` agent                        |
 
 ## Act as a person (`workspace_act_as`)
 
@@ -434,13 +435,163 @@ rakerun app run app_01JBF3Q8T6ZK2M4N7R9V1X3Y5A follow_up --input '{"quote_id":"q
 
 To share an app as a developer, commit and push (`rakerun deploy`). The CLI never asks to share.
 
+## Machine agents (`mode: machine`)
+
+Beta. A machine agent runs a compiled procedure (a Machine) step by step, with no model loop. Each tool call goes through the Run tools, grants, approvals and trace of the agent. Use it for a process that must run the same way each time (invoice intake, vendor onboarding, a claim check). Reference: https://cloudraker-run.docs.buildwithfern.com/guides/machine-agents. Language: https://docs.cloudraker.com/paperwork/v2/machines-language.
+
+```bash
+rakerun machine new ap/invoice-intake   # AGENTS.md, agent.yml, machine.json, machine.tools.json
+```
+
+```yaml
+# ap/invoice-intake/agent.yml
+mode: machine
+triggers: { http: true }
+machine: # leaf-only
+  procedure: machine.json # default; machine.yaml is accepted
+  tools: machine.tools.json # default; the pinned MCP and _code tool contracts
+  exception_model: default # default | off (off: no model rung)
+connectors: [erp]
+approvals: { require: [send, delete, call] } # an irreversible step counts as call
+# machine defaults: timeout 60m, idle_ttl 7d
+```
+
+- Not used in mode machine: `model`, `llm`, `limits.max_steps` and the `AGENTS.md` prompt (it describes the Machine for people). `output_schema` is refused: the result is always `{outcome, report, machine: {run_id, ir_hash}}`.
+- Inputs: a string `input` is `user_message`; an object maps each key to a procedure input; the files of the first turn are `f1`, `f2`, ... (`{file_id, name, content_type, bytes}`).
+
+### `machine.json` (`bm-procedure/2`)
+
+```json
+{
+  "language": "bm-procedure/2",
+  "procedure": "invoice-intake",
+  "inputs": {
+    "user_message": { "type": "string" },
+    "f1": { "type": "file", "description": "the invoice PDF" }
+  },
+  "steps": [
+    {
+      "id": "extract",
+      "tool": "file_extract",
+      "args": {
+        "file_id": "@input.f1.file_id",
+        "schema": {
+          "type": "object",
+          "properties": { "vendor": { "type": "string" }, "total": { "type": "number" } },
+          "required": ["vendor", "total"]
+        }
+      }
+    },
+    { "id": "totals", "check": "extract.value.total > 0", "message": "the total is positive" },
+    {
+      "id": "vendor",
+      "tool": "mcp_erp_find_vendor",
+      "args": { "name": "@extract.value.vendor" },
+      "on_error": {
+        "cases": [{ "code": "not_found", "then": { "hold": "The vendor is not in the ERP." } }]
+      }
+    },
+    {
+      "id": "bill",
+      "tool": "mcp_erp_create_bill",
+      "args": { "vendor_id": "@vendor.id", "amount": "@extract.value.total" },
+      "limit": 1
+    }
+  ],
+  "finish": { "status": "done", "report": "Bill {{@bill.bill_id}} is in the ERP." }
+}
+```
+
+Step kinds: `tool`, `ask` (`rung: ["decide", "model", "person"]`), `code`, `check`, `when` (needs `else`), `foreach` (set `max_items`), `await`, `hold`, `finish` (`done`, `refused`, `aborted`). References (`@step.key`) are checked against the output schema of the tool. A write or an irreversible step that uses an extracted value needs a check before it. An irreversible step needs `limit: 1`. End each `rung` list with `person`: the `model` and `decide` rungs are not available in every environment.
+
+Tool names in steps: `file_*`, `data_*` (from the `data:` grants), `knowledge_search` and `knowledge_read`, the `operationId` of an `_apis` operation (args `{params, body}`), a `_code` stem, `mcp_{server}_{tool}`. A Machine cannot call `message`, `done`, `ask`, `list_files`, `read_file`, `delegate`, `message_agent`, door or phone tools.
+
+### `machine.tools.json`
+
+Pin every MCP tool that a step calls, copied from the server listing with the same `inputSchema` and `outputSchema`. A `_code` pin is optional: it adds an output schema. Do not pin `file_*`, `data_*`, `knowledge_*` or `_apis` tools: Run gives their contracts.
+
+```json
+{
+  "tools": [
+    {
+      "name": "mcp_erp_find_vendor",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": { "id": { "type": "string" }, "name": { "type": "string" } },
+        "required": ["id", "name"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "x-errors": {
+        "not_found": { "type": "object", "properties": { "code": { "const": "not_found" } } }
+      }
+    },
+    {
+      "name": "mcp_erp_create_bill",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "vendor_id": { "type": "string" }, "amount": { "type": "number" } },
+        "required": ["vendor_id", "amount"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": { "bill_id": { "type": "string" } },
+        "required": ["bill_id"]
+      },
+      "x-errors": {
+        "duplicate": { "type": "object", "properties": { "code": { "const": "duplicate" } } }
+      },
+      "x-effect": "irreversible"
+    }
+  ]
+}
+```
+
+`annotations.readOnlyHint: true` gives `read`, `destructiveHint: true` gives `irreversible`, else `write`. `x-effect` raises the effect, never lowers it. At the first turn, Run compares each pin with the live listing: a changed schema or a higher live effect fails the run with `machine_tools_changed`. There is no `rakerun machine tools pull` yet: edit the file by hand.
+
+### Effects and approvals
+
+| Run effect       | Machine effect |
+| ---------------- | -------------- |
+| `read`           | `read`         |
+| `internal`       | `write`        |
+| `external_write` | `write`        |
+| `delete`         | `irreversible` |
+| `send`           | `irreversible` |
+| `call`           | `irreversible` |
+
+The approval gate uses the stricter of the Run effect and the Machine effect: an irreversible step counts as `call`. With `require: [send, delete, call]` a person approves each irreversible step in the console or the Inbox. A denied call gives the step the error `approval_denied`, an edited approval gives `approval_edited` (the call does not run), and a conversation on web chat, email, Slack or Teams gives `approval_unavailable` (no person can approve there). A door with these channels can name a machine agent: each run of its conversations runs the Machine. The procedure handles these codes with `on_error`, or holds.
+
+A write that may have run is never sent twice: after a crash a read runs again, and a write holds with `unknown_outcome` unless the step is `idempotent`.
+
+### Machine lint
+
+`rakerun lint` does not compile a procedure (the CLI has no Machines compiler). It prints a note. The push lint compiles each procedure, and the deploy compiles it again: a procedure that does not compile fails the deploy of the whole tree.
+
+| Rule                        | Level            | Check                                                                     |
+| --------------------------- | ---------------- | ------------------------------------------------------------------------- |
+| `machine_procedure_missing` | error            | The procedure file is absent, or not JSON or YAML                         |
+| `machine_compile`           | error or warning | One finding per compiler problem: `<code> <path>: <message>`, with line   |
+| `machine_tool_unknown`      | error            | A step or a pin names a tool that the agent cannot have                   |
+| `machine_effect_lowered`    | error            | A pin or a step lowers the effect of a tool                               |
+| `machine_model_ignored`     | warning          | The leaf `agent.yml` sets `model`                                         |
+| `machine_output_schema`     | error            | A machine agent sets `output_schema`                                      |
+| `machine_mcp_output_schema` | error            | An MCP pin has no `outputSchema`                                          |
+| `machine_target`            | error            | A phone door, `agents.message` or `agents.delegate` names a machine agent |
+
+A machine agent is not a console chat target in this beta. Start it from the API, a trigger or `rakerun run start` (see [rakerun-runs](../rakerun-runs/SKILL.md#machine-agents)).
+
 ## Checklist before `rakerun deploy`
 
 1. `rakerun lint` is clean.
 2. Every `${secret:NAME}` is declared under `secrets:` and set: `rakerun secret list`, `rakerun secret set NAME`.
 3. Every host the agent calls is under `network:` (or comes from `_apis`, `mcp.json`, a connector). A host with `oidc: { identity: user }` works only in turns of a verified person; test it from the console, not with an API token.
 4. Every name in `connectors:` exists, is granted and is `connected`: `rakerun connector list`. Every name in a `tools:` list is a server tool that the connector allows: `rakerun connector tools <name>`. A wrong name fails the run with `connector_unavailable`.
-5. `mode: turns` when the agent must ask questions, receive messages from other agents, or take calls in a door with `channels.phone`; `zeroshot` otherwise.
+5. `mode: turns` when the agent must ask questions, receive messages from other agents, or take calls in a door with `channels.phone`; `mode: machine` when a fixed procedure must do the work; `zeroshot` otherwise.
 6. After the deploy: `rakerun agent show <agent>` prints the resolved config, the tool list, the missing secrets and the deployments.
 
 ## See also
