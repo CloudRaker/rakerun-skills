@@ -335,6 +335,7 @@ claims/triage/
 ```
 
 - Every member sees and opens a project app. `audience` (`members`, `admins`, emails or team slugs) only narrows who sees it.
+- `reach` decides where Apps lists the app. `project` (default): only when its project is selected. `organization`: in every project and in All projects. It never changes access: a link or a pin still opens the app.
 - `tables` names tables of the project (`_schemas`). No agent grant caps them. A table in `write` is also read. Lint `app_table_unknown` refuses a table that the project does not have.
 - Each action names its `agent:`. An action with no agent is a lint error.
 - The app shows only the records the viewer can open. The record rules of `_schemas/<name>.yml` `access` decide (see [rakerun-records](../rakerun-records/SKILL.md)).
@@ -350,6 +351,7 @@ icon: file-text # a lucide name from the closed list; default layout-grid
 category: Sales # from apps.yml categories or the default list; default Other
 audience: members # members | admins | [emails]; default: the agent audience
 listed: true # false: hidden from Apps, still opens by link and pin
+reach: project # project | organization; default project: Apps lists it only in its own project
 featured: false # shown in the Featured row
 tables: # default: read = data.read + data.write, write = data.write
   read: [quote, lead] # within the agent data grants
