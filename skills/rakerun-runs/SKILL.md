@@ -18,6 +18,20 @@ rakerun run start linear-triage --data '{"ticket": "EGR-123"}'             # 202
 rakerun run start triage --repo agents --branch try-it --stream            # a repo-qualified agent on a preview
 ```
 
+### Files
+
+Attach documents with `--file`, `--file-url` or `--file-id`. Repeat them for up to 20 files. With files, `--input` is optional.
+
+```bash
+rakerun run start ap/invoice-intake --file invoice.pdf --stream                        # a local file, max 5 MB
+rakerun run start ap/invoice-intake --file a.pdf --file b.pdf --input "Compare these"  # several files
+rakerun run start ap/invoice-intake --file-url https://example.com/scan.pdf            # the run fetches it, max 16 MB
+rakerun run start ap/invoice-intake --file-id file_01…                                 # a file of an earlier run
+rakerun run turn run_01… --file po.pdf --input "Here is the PO" --stream
+```
+
+`--file` sends the file inline. The CLI sets the name from the file name and the content type from the extension. All `--file` files of one command must stay under about 11 MB together. For a bigger file, put it at an HTTPS URL and use `--file-url`. A `file` event of a run gives the `file_id` of each file that the run writes.
+
 `--stream` prints the events as they arrive: `message` text as is, `· progress` on stderr, `✓ completed` with the `done` result as JSON, `✗ failed: <code>: <message>`, a `?` question with its id, its answers and the command that answers it. A lead agent (one with `agents:`) also prints its run tree on stderr: `→ delegated to <agent> (<run>)`, `← <agent>: <status> <summary>`, `✉ to <agent>: <text>` and `✉ from <agent>: <text>`. It ends on the terminal event. Without `--stream`, follow later with `rakerun run stream <id>` (replays from the first event).
 
 `--json` prints one JSON event per line, the raw envelopes (`id`, `seq`, `type`, `ts`, `run_id`, `agent`, `turn`, `data`).
