@@ -18,7 +18,7 @@ rakerun run start linear-triage --data '{"ticket": "EGR-123"}'             # 202
 rakerun run start triage --repo agents --branch try-it --stream            # a repo-qualified agent on a preview
 ```
 
-`--stream` prints the events as they arrive: `message` text as is, `· progress` on stderr, `✓ completed` with the `done` result as JSON, `✗ failed: <code>: <message>`, a `?` question with the turn command to answer it. A lead agent (one with `agents:`) also prints its run tree on stderr: `→ delegated to <agent> (<run>)`, `← <agent>: <status> <summary>`, `✉ to <agent>: <text>` and `✉ from <agent>: <text>`. It ends on the terminal event. Without `--stream`, follow later with `rakerun run stream <id>` (replays from the first event).
+`--stream` prints the events as they arrive: `message` text as is, `· progress` on stderr, `✓ completed` with the `done` result as JSON, `✗ failed: <code>: <message>`, a `?` question with its id, its answers and the command that answers it. A lead agent (one with `agents:`) also prints its run tree on stderr: `→ delegated to <agent> (<run>)`, `← <agent>: <status> <summary>`, `✉ to <agent>: <text>` and `✉ from <agent>: <text>`. It ends on the terminal event. Without `--stream`, follow later with `rakerun run stream <id>` (replays from the first event).
 
 `--json` prints one JSON event per line, the raw envelopes (`id`, `seq`, `type`, `ts`, `run_id`, `agent`, `turn`, `data`).
 
@@ -32,8 +32,12 @@ A `mode: turns` agent ends each turn in `waiting`. A `mode: machine` agent waits
 
 ```bash
 rakerun run turn run_01… --input "Yes, close it" --stream
-rakerun run turn run_01… --question q_7 --input "blue"      # answer an ask
+rakerun run show run_01…                                    # a waiting run: the question, its id and its answers
+rakerun run answer run_01… blue                             # answer the open question
+rakerun run answer run_01… --data '{"amount": 120}'         # a JSON answer
 ```
+
+`run answer` reads the open question of the run and sends the value with its id. It stops with an error, and sends nothing, when the run asks no question. `rakerun run turn run_01… --question q_7 --input "blue"` does the same with an id that you give.
 
 The stream of a turn ends at `turn.completed`. A `waiting` run expires after `idle_ttl` (24h by default).
 
@@ -46,7 +50,7 @@ rakerun run list --cursor <next cursor>     # printed at the end of a page
 rakerun run list --root-only                 # no child runs
 rakerun run list --parent run_01…            # the child runs of one run (the PARENT column)
 rakerun run children run_01…                 # the same, shorter
-rakerun run show run_01…                     # status, turn, deployment sha, usage, result, error
+rakerun run show run_01…                     # status, turn, deployment sha, usage, result, error, open question
 rakerun run cancel run_01…
 ```
 
@@ -72,7 +76,7 @@ rakerun run start ap/invoice-intake --data '{"vendor": "Acme", "po": "PO-7"}' --
 ```
 
 - Each tool call of the Machine is one `run.progress` work row (call id `mc_<seq>`) and one tool span. A model, decide or code step of the engine is one `machine` span in `rakerun run trace`.
-- An `ask` step or a failed step that reaches a person sends a `question` with the id `mq_<seq>` and opens an Inbox item. Answer it with the question id: `rakerun run turn run_01… --question mq_12 --data '"billing"'`. A value that does not match the answer schema does not end the wait: the run sends a message and keeps waiting.
+- An `ask` step or a failed step that reaches a person sends a `question` with the id `mq_<seq>` and opens an Inbox item. `rakerun run show run_01…` shows the question, its id and its answers (the `enum` of the answer schema). Answer it with `rakerun run answer run_01… billing`. A value that does not match the answer schema does not end the wait: the run sends a message and keeps waiting.
 - An `await` step waits for a later input: `rakerun run turn run_01… --input "Here is the PO number: PO-7"`.
 - A gated call waits for an approval. A person approves or denies it in the console or the Inbox. A denied call gives the step the error `approval_denied`.
 - The run completes on `done`, `refused` and `aborted`. The report is the last `message`, and the result is `{outcome, report, machine: {run_id, ir_hash}}`. Check `result.outcome`: a refused claim is a completed run.
