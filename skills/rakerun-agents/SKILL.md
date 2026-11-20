@@ -9,7 +9,7 @@ allowed-tools:
 
 # Writing an agent
 
-Reference: https://cloudraker-run.docs.buildwithfern.com/guides/agent-yml and https://cloudraker-run.docs.buildwithfern.com/guides/repo-layout. Check `rakerun lint` after every edit.
+Reference: https://docs.cloudraker.com/run/guides/agent-yml and https://docs.cloudraker.com/run/guides/repo-layout. Check `rakerun lint` after every edit.
 
 ## The folder model
 
@@ -132,7 +132,7 @@ network:
 | `user_identity_no_person` | warning | Every trigger of the agent has no person (schedule, inbound, phone, email), and a connector has `identity: user`. |
 | `api_security_header`     | warning | An `_apis` file needs a header that `network:` lacks. An `oidc` header counts as supplied                         |
 
-Reference: https://cloudraker-run.docs.buildwithfern.com/guides/oidc-identity.
+Reference: https://docs.cloudraker.com/run/guides/oidc-identity.
 
 ## Agents that work together (`agents`)
 
@@ -439,7 +439,7 @@ To share an app as a developer, commit and push (`rakerun deploy`). The CLI neve
 
 ## Machine agents (`mode: machine`)
 
-Beta. A machine agent runs a compiled procedure (a Machine) step by step, with no model loop. Each tool call goes through the Run tools, grants, approvals and trace of the agent. Use it for a process that must run the same way each time (invoice intake, vendor onboarding, a claim check). Reference: https://cloudraker-run.docs.buildwithfern.com/guides/machine-agents. Language: https://docs.cloudraker.com/paperwork/v2/machines-language.
+Beta. A machine agent runs a compiled procedure (a Machine) step by step, with no model loop. Each tool call goes through the Run tools, grants, approvals and trace of the agent. Use it for a process that must run the same way each time (invoice intake, vendor onboarding, a claim check). Reference: https://docs.cloudraker.com/run/guides/machine-agents. Language: https://docs.cloudraker.com/paperwork/v2/machines-language.
 
 ```bash
 rakerun machine new ap/invoice-intake   # AGENTS.md, agent.yml, machine.json, machine.tools.json

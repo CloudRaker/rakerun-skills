@@ -1,6 +1,6 @@
 # CloudRaker Run skills
 
-Agent skills for [cloudraker.run](https://cloudraker-run.docs.buildwithfern.com) and its `rakerun` CLI, in the [Agent Skills](https://agentskills.io) format. Available as plugins for Claude Code and OpenAI Codex.
+Agent skills for [cloudraker.run](https://docs.cloudraker.com/run) and its `rakerun` CLI, in the [Agent Skills](https://agentskills.io) format. Available as plugins for Claude Code and OpenAI Codex.
 
 This repository holds two skill packs:
 
