@@ -79,7 +79,7 @@ rakerun token create --name ci --scopes run,read   # opens the /cli page, saves 
 rakerun token list                                 # prints the URL of the Dash page of API keys
 ```
 
-Dash holds the other key actions: the list of keys, revocation, an agent list and an expiry (`https://dash.cloudraker.com/api-keys`). `rakerun token revoke` only prints this URL and exits with code 2. Only an organization admin can create a key.
+Dash holds the other key actions: the list of keys, revocation, an agent list and an expiry (`https://app.cloudraker.com/api-keys`). `rakerun token revoke` only prints this URL and exits with code 2. Only an organization admin can create a key.
 
 Scopes: `run` (start and turns), `read` (runs and events), `cancel`, `git` (push and clone), `secrets` (the `/_secrets` API), `admin` (the console API as an admin: secrets, connectors, data writes), `preview` (preview hosts), `act_as` (`x-run-as`). The CLI itself needs `admin` for writes, `read` for reads. A caller of an agent needs `run` and `read`. Never paste a token into a repo file or a chat message.
 
