@@ -347,6 +347,9 @@ Use one catalog action per event. A record write can have one `then` action. Rev
 
 For source documents, use `DocumentViewer` with file ids, source run ids, rendered pages and Paperwork citations.
 Call `file_extract` with `citations: true`. Preserve zero-based pages, normalized boxes, missing markers and uncited values.
+Set `save_result: true` to retain the exact extraction as `result_file`. With `files.read_raw: true`, read that JSON through `file_read` in code.
+Copy citations from the retained JSON into records. This preserves coordinates, source ids and explanations without model transcription.
+Call `file_extract` directly. Long Paperwork calls can exceed the `execute_code` timeout. Use code for the later JSON copy.
 The `file_render_page` tool takes one-based pages. Store its page images as zero-based viewer pages.
 Keep signed file URLs in runtime memory only. The viewer resolves each file through the source run's grants and the viewer's access.
 
