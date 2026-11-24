@@ -1,7 +1,7 @@
 ---
 name: rakerun-agents
 description: |
-  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, machine, model, triggers, limits, network with oidc identity, secrets, connectors, data, knowledge, tools, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.html and .yml, apps.yml, actions), the flag tool, runs on one record, machine agents (mode: machine, machine.json procedures, machine.tools.json pins, effects) and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run. For web chat, phone, email, Slack or Teams, use rakerun-doors.
+  Write or change a cloudraker.run agent: the folder model, AGENTS.md prompts, every agent.yml key (mode, machine, model, triggers, limits, network with oidc identity, secrets, connectors, data, knowledge, tools, events, webhooks, agents, workspace_act_as), inheritance from root to leaf, tools from the repo (skills, mcp.json, _apis, _code), team apps (apps/*.json and .yml, apps.yml, actions), the flag tool, runs on one record, machine agents (mode: machine, machine.json procedures, machine.tools.json pins, effects) and the lint rules a push enforces. Use when the user wants to author or edit an agent for CloudRaker Run. For web chat, phone, email, Slack or Teams, use rakerun-doors.
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -307,7 +307,58 @@ A script name cannot collide with a built-in tool (also `handoff`, `switch_langu
 
 ## Apps
 
-An app is a small HTML page next to an agent. The team finds it in **Apps** in the console. It reads and changes Memory rows and starts agent work from buttons (actions). Git is the truth: developers write the files, and business users get the same files from **Share with team**.
+New apps use validated JSON rendered by CloudRaker Agent UI, with Arc components and Arc tokens. Do not write custom app CSS.
+Use project files `apps/<slug>.json` and `apps/<slug>.yml`. Keep the app id when migrating an existing app.
+Never keep HTML and JSON bodies for the same slug. HTML is a legacy format with one supported release remaining.
+
+A project app starts with this file layout:
+
+```text
+apps/claims.json   # validated UI specification
+apps/claims.yml    # stable id, tables, actions and audience
+_schemas/claim.yml # the records the app reads
+```
+
+A minimal body uses existing catalog components:
+
+```json
+{
+  "version": 1,
+  "title": "Claims",
+  "home": "list",
+  "pages": {
+    "list": {
+      "title": "Claims",
+      "root": "page",
+      "queries": { "claims": { "table": "claim" } },
+      "elements": {
+        "page": { "type": "Page", "props": { "title": "Claims" }, "children": ["table"] },
+        "table": { "type": "DataTable", "props": { "rows": { "$state": "/queries/claims/rows" }, "columns": ["reference", "status"] } }
+      }
+    }
+  }
+}
+```
+
+Declare `claim` in the metadata's `tables.read` grant. Validate the app before publication.
+
+Read [Build an app](https://docs.cloudraker.com/run/guides/apps) for conventions. In the platform source, [the Agent UI app specification](../../../../docs/specs/agent-ui-apps-spec.md) defines the catalog, expressions, queries and events.
+Use one catalog action per event. A record write can have one `then` action. Review component examples before authoring a spec.
+
+For source documents, use `DocumentViewer` with file ids, source run ids, rendered pages and Paperwork citations.
+Call `file_extract` with `citations: true`. Preserve zero-based pages, normalized boxes, missing markers and uncited values.
+The `file_render_page` tool takes one-based pages. Store its page images as zero-based viewer pages.
+Keep signed file URLs in runtime memory only. The viewer resolves each file through the source run's grants and the viewer's access.
+
+Use the existing Input, Select, Textarea, DataTable and RecordForm components for app-specific workflows.
+Keep clinical rules, approval fields, message templates and simulation notices in the client project.
+Give only human reviewers write access to approval records. The execution agent must independently validate the approved content and source revision.
+The catalog is closed. Never invent a component or embed custom React or JavaScript in an app JSON file.
+
+Some CLI versions scaffold HTML. Check the generated extension and replace the body with JSON for a new app.
+The following HTML examples describe the legacy format. Metadata, permissions and the runtime contract also apply to JSON apps.
+
+### Legacy HTML apps
 
 ```text
 sales-assistant/
@@ -322,7 +373,7 @@ An `.html` with no `.yml` is an app with defaults. The file name is the app name
 
 ### Project apps (`apps/<slug>.*` at the root)
 
-The new default is a project app: `apps/<slug>.html` and `apps/<slug>.yml` at the project root. No agent owns it.
+New project apps use `apps/<slug>.json` and `apps/<slug>.yml` at the project root. No agent owns the app. The legacy example below uses HTML.
 
 ```text
 apps/
