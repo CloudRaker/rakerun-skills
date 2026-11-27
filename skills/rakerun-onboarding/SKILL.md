@@ -1,7 +1,7 @@
 ---
 name: rakerun-onboarding
 description: |
-  Set up cloudraker.run for the user from start to first working agent: sign in, fill the organization profile, read the company website, ask what the user is here to build and write its record types, links, teams and access rules, suggest and import templates, test an agent on a branch, connect Slack, Microsoft 365, Google Workspace and MCP tools, and work through the console onboarding checklist. Use when the user asks you to set up, onboard or get started with CloudRaker Run, or pastes the "Let your agent do it" prompt from the console.
+  Set up cloudraker.run for the user from start to first working agent: sign in, fill the organization profile, read the company website, ask what the user is here to build and write its record types, links, teams and access rules, suggest and import templates, test an agent on a branch, connect Slack, Microsoft 365, Google Workspace and MCP tools, and work through the console onboarding checklist. Use when the user asks you to set up, onboard or get started with CloudRaker Run, or pastes a prompt with an onboarding session link (the "Copy prompt" action of the console or the sign-up).
 allowed-tools:
   - Bash(rakerun *)
   - Bash(npx rakerun *)
@@ -11,7 +11,36 @@ allowed-tools:
 
 The console has an onboarding checklist per organization. You drive the same checklist from the terminal. The user sees your progress in the console sidebar.
 
+## 0. The onboarding session
+
+The user can start with a prompt from the console or the sign-up ("Copy prompt"). The prompt holds a session link. Send a GET request to it. The answer is markdown: the current step, one next action and the rules. Do the steps in order:
+
+| Session step | What you do | Section of this skill |
+| --- | --- | --- |
+| Step 1 of 4 | Interview the user, then `PUT` the profile to `<session link>/profile` | [Interview](#interview-from-your-memory-first) |
+| Step 2 of 4 | Give the user the link and the code. Run `npx rakerun login --session <id>` | 1. Sign in |
+| Step 3 of 4 | The user selected Connect. The login command ends | 1. Sign in |
+| Step 4 of 4 | Install the skill pack, read the state, build the agents on a Draft | 2 to 7 |
+
+The login command stores the CLI login and prints no token. Then the session closes, and its link answers "Session not found". This is correct. Continue with section 2. If you do not know whether the login ended, run `npx rakerun whoami`: when it prints an organization, the login is done. When it fails, ask the user to select "Copy prompt" again. Outside production, the session step gives the exact login command with its origin flag: copy it as it is.
+
+If you cannot run terminal commands, tell the user: this version needs an AI agent with a terminal, such as Claude Code, Codex or Cursor. The user can also build agents by hand in the console.
+
+### Interview: from your memory first
+
+Do not guess the work from the company website. The website often does not show what the user wants to improve.
+
+1. Search your memory and your past conversations with the user. Find the processes that they want to improve and the documents in them.
+2. If you find some, propose two or three concrete agents, with one reason each. Ask the user to pick, correct or add.
+3. If you know nothing, ask these questions, one at a time: What work repeats every week? What arrives by email or as documents? What do you copy from one system to another? What waits on one person?
+4. Ask: "Is this for you alone, or for an organization?" The answer is the profile field `workspace` (`personal` or `organization`).
+5. Put the agents that the user picked in `goals`, one line each.
+
+Build the agents that the user picked. Use a template of `suggestions` only when it fits one of them.
+
 ## 1. Sign in
+
+With an onboarding session, the login is `npx rakerun login --session <id>` (section 0). Without a session:
 
 ```bash
 npx rakerun login --org <slug> --wait   # on the user's computer, in the background: prints a link and a code, then waits
@@ -30,13 +59,15 @@ The answer holds `profile`, `lookup` (the website summary), `checklist` (items w
 
 ## 3. Profile
 
-Infer what you can from what you know about the user, then confirm it with them in one short message. Ask one question at a time for the rest.
+Infer what you can from what you know about the user, then confirm it with them in one short message. Ask one question at a time for the rest. After an onboarding session, copy what you learned in the interview: `org_name`, `goal` (the agents that the user picked) and `technical`.
 
 ```bash
 npx rakerun onboarding set --data '{"org_name":"Acme","domain":"acme.com","audience":"internal","technical":true,"field":"Insurance brokerage","goal":"Triage new claims from email","tools":["slack","hubspot"]}'
 npx rakerun onboarding lookup        # reads https://<domain>/ and summarizes it; never fails
 ```
 
+- Send all seven keys: the gateway refuses a body with a missing or an unknown key. Use `null` for an unknown `domain`, `audience`, `technical` or `field`, and `[]` for no `tools`.
+- `goal`: one short sentence of 500 characters or less.
 - `domain`: from the email of the user, but never a free mail provider (gmail.com, outlook.com...). `null` when unknown.
 - `audience`: `internal` (agents for their own team) or `product` (agents their product calls as an API).
 - `technical`: `true` when the user writes code. For `false`, use plain words: project, change, publish.
@@ -59,7 +90,7 @@ Write the plan back in plain words, one line for each record type, and let the u
 
 ## 5. First agents
 
-Suggest at most three templates from `suggestions`, one reason each. Then make the project and deploy its starter agent on `main` at once. The first branch that a new project gets becomes its live branch, so the first deploy goes live with no approval. Keep that deploy to the starter agent only:
+Suggest at most three agents or templates, one reason each. After an onboarding session, start from the agents that the user picked. Then make the project and deploy its starter agent on `main` at once. The first branch that a new project gets becomes its live branch, so the first deploy goes live with no approval. Keep that deploy to the starter agent only:
 
 ```bash
 npx rakerun new agents                                  # a new project folder with a starter agent (hello/), git and the remote
@@ -69,7 +100,7 @@ cd agents && npx rakerun deploy -m "Start the project"  # the first deploy: it g
 Do the rest of this step in the `agents` folder, on a branch. Then each deploy of the step goes to a preview, and nothing of it is live. Import the templates that the user picks:
 
 ```bash
-git switch -c onboarding
+git switch -c changes/first-agents
 npx rakerun template import <id>   # one command for each template
 ```
 
@@ -83,7 +114,7 @@ Before the deploy, show the user who can open what:
 npx rakerun lint --explain
 ```
 
-Tell the user the sentences of each record type, word for word, for example "People who can open an intake can also open its lab results." Ask whether they are right. Change the files and run the command again until the user agrees, and until lint shows no error. Then deploy the `onboarding` branch, never `main`, so the change has a preview:
+Tell the user the sentences of each record type, word for word, for example "People who can open an intake can also open its lab results." Ask whether they are right. Change the files and run the command again until the user agrees, and until lint shows no error. Then deploy the `changes/first-agents` branch, never `main`, so the change has a preview:
 
 ```bash
 npx rakerun deploy -m "First agents"
@@ -95,10 +126,10 @@ A preview adds no record types, and it uses the live access rules and links of t
 
 ## 6. Test
 
-On the branch, test the agents that keep no new records:
+On the branch, test the agents that keep no new records. Always name the project with `--repo`: an agent that exists only on the branch is not live, so Run finds it only through the project:
 
 ```bash
-npx rakerun run start <agent> --branch onboarding --input "<a realistic example for this business>" --stream
+npx rakerun run start <agent> --repo agents --branch changes/first-agents --input "<a realistic example for this business>" --stream
 ```
 
 On the branch, do not test an agent that reads or writes a new record type. There, its data tools (`data_file` too) answer `schema_not_found` for the new record types. This does not mean that the files are wrong, so do not change them for it. Tell the user why, and test that agent after the publish (step 7). To test it before the publish, push the same commit to a development project: see [rakerun-projects](../rakerun-projects/SKILL.md#environments).

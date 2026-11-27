@@ -45,7 +45,8 @@ npx skills add CloudRaker/rakerun-skills --agent cursor
 ```
 
 The installer adds project skills for Cursor. It does not require a separate rules file.
-Copy the setup prompt from the toast at the bottom right of the [Run console](https://run.cloudraker.com/agent-setup).
+A new person selects **Copy prompt** in the Run console or the sign-up and pastes the prompt into their agent. The prompt holds an onboarding session link: the agent reads it, interviews the person and connects with `npx rakerun login --session <id>`.
+For an organization that already works, copy the setup prompt from the toast at the bottom right of the [Run console](https://run.cloudraker.com/agent-setup).
 To reopen it, select **Connect your agent** in the account menu. Your coding agent handles setup.
 CLI token creation requires an administrator. Every role can read the instructions.
 Run uses this CLI and skills. The server at `mcp.cloudraker.com` serves Paperwork and Workspace.

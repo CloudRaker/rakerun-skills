@@ -6,7 +6,7 @@ Your AI agent does every step with the `rakerun` CLI. You answer questions in pl
 
 For coding agents that work with git and YAML, use the developer pack in the [parent folder](../README.md).
 
-In this version, only an admin can connect an AI agent to Run: the sign-in creates a CLI token, and only an admin can create one. A person with "Can build" who is not an admin makes changes in the Builder of the console.
+In this version, only an admin can connect an AI agent to Run: the sign-in creates a CLI token, and only an admin can create one. A person with "Can build" who is not an admin makes changes in the agent settings of the console, on a Draft.
 
 ## Install
 

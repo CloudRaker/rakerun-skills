@@ -21,6 +21,8 @@ rakerun start                   # no org yet: sign-up, org, token, first project
 rakerun whoami
 ```
 
+**With an onboarding session:** the user pasted a prompt with a session link ("Copy prompt" in the console or the sign-up). Send a GET request to the link and follow its steps. The sign-in is `rakerun login --session <id>`: it waits until the user selects Connect on the page of the link, then stores the login and prints no token. See [rakerun-onboarding](../rakerun-onboarding/SKILL.md).
+
 `login` and `start` need a sign-in in the browser. Pick the path by where you run:
 
 **On the user's computer** (a terminal, a local agent): run `rakerun login --org <slug> --wait` yourself, in the background. It opens the console in a tab and waits on a loopback port. Your output shows a link and a code. Tell the user: "open <link> and click Connect when the page shows <code>". Keep the command running until it ends. Without a terminal and without `--wait`, the command prints what to do and exits with code 2. `rakerun start --wait --name <project> --templates <id,id>` answers the prompts, so no terminal input is needed.
@@ -41,7 +43,7 @@ Verify auth: `rakerun repo list` (any table means the token works). A `unauthori
 
 ## Early access and the waitlist
 
-CloudRaker Run is in early access. An organization without access is waitlisted. A waitlisted org can sign up, do the onboarding, create projects, import templates and deploy agents. It cannot run them: every run, turn and Builder session answers `403 run_access_required`. The CLI then prints the waitlist message, not the raw error.
+CloudRaker Run is in early access. An organization without access is waitlisted. A waitlisted org can sign up, do the onboarding, create projects, import templates and deploy agents. It cannot run them: every run and turn answers `403 run_access_required`. The CLI then prints the waitlist message, not the raw error.
 
 ```bash
 rakerun access                         # granted or waitlisted, for the org of the profile

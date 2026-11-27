@@ -393,7 +393,7 @@ claims/triage/
 - `tables` names tables of the project (`_schemas`). No agent grant caps them. A table in `write` is also read. Lint `app_table_unknown` refuses a table that the project does not have.
 - Each action names its `agent:`. An action with no agent is a lint error.
 - The app shows only the records the viewer can open. The record rules of `_schemas/<name>.yml` `access` decide (see [rakerun-records](../rakerun-records/SKILL.md)).
-- The Builder changes a project app. A publisher makes the change live.
+- A builder changes a project app in its files, on a branch or a Draft. A publisher makes the change live.
 
 ### `<agent>/apps/<slug>.yml`
 

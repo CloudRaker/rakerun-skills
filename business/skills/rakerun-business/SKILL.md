@@ -40,6 +40,8 @@ Use the words of the console. Never say these words to the person: branch, commi
 
 ## Sign in
 
+**With an onboarding session:** the person pasted a prompt with a session link ("Copy prompt" in the console or the sign-up). Send a GET request to the link and follow its steps. The sign-in is `npx rakerun login --session <id>`. See [rakerun-business-onboarding](../rakerun-business-onboarding/SKILL.md).
+
 A person approves each sign-in. In this version, that person must be an admin (see [Who can sign in](#who-can-sign-in)). Select the path for the place where you run. Replace `<project>` with a short project name in lowercase, for example `clinic`. This pack is already installed, so add `--skills none`.
 
 **On the computer of the person** (you can open their browser):
@@ -68,9 +70,9 @@ Sign-up and saved changes need no code. The agents need an access code to work (
 
 ### Who can sign in
 
-In this version, only an admin can connect you to Run. Each sign-in creates a CLI token, and only an admin can create one. "Can build" does not change this. When the page shows "This action needs the admin role.", the person is not an admin. Say: "Only an admin can connect me to Run. You can make the change yourself in the Builder of the console, or an admin can do this work with me."
+In this version, only an admin can connect you to Run. Each sign-in creates a CLI token, and only an admin can create one. "Can build" does not change this. When the page shows "This action needs the admin role.", the person is not an admin. Say: "Only an admin can connect me to Run. You can make the change yourself in the agent settings of the console, or an admin can do this work with me."
 
-A person with "Can build" (Settings > People) who is not an admin makes changes in the Builder of the console, on a Draft. Never ask an admin to turn on "Can build" so that you can sign in: it does not help.
+A person with "Can build" (Settings > People) who is not an admin makes changes in the agent settings of the console, on a Draft. Never ask an admin to turn on "Can build" so that you can sign in: it does not help.
 
 Some steps also need an admin: a secret value on the Secrets page, a connector, a team and the people of the organization.
 
@@ -101,7 +103,7 @@ Each change follows the same seven steps. Do not skip the check (step 4) or the 
 3. **Write the files.** [rakerun-business-records](../rakerun-business-records/SKILL.md) tells you how to write record types, links, teams and access rules. An agent is a folder with an `AGENTS.md` (numbered steps in plain words) and an `agent.yml`.
 4. **Check.** Run `npx rakerun lint` and fix each error. When record types or access rules change, run `npx rakerun lint --explain`. Read its sentences to the person, word for word, without the file names in parentheses. Ask: "Is this right?" Change the files until the person says yes.
 5. **Save.** Run `npx rakerun deploy -m "<one plain sentence>"`. The change is now open in the console. Nothing is live yet.
-6. **Let the person try it.** Give the person this link: `<console_url>/builder?repo=<project>&branch=changes/<slug>`. Say: "Open this link to try the change. Nothing is live yet." You can also try an agent yourself: `npx rakerun run start <agent> --repo <project> --branch changes/<slug> --input "<a realistic example>" --stream`. Always name the project with `--repo`: an agent that is only in the change is not live, so Run finds it only through the project.
+6. **Let the person try it.** Give the person this link: `<console_url>/projects?repo=<project>&branch=changes/<slug>`. Say: "Open this link to try the change. Nothing is live yet." You can also try an agent yourself: `npx rakerun run start <agent> --repo <project> --branch changes/<slug> --input "<a realistic example>" --stream`. Always name the project with `--repo`: an agent that is only in the change is not live, so Run finds it only through the project.
 7. **Make it live.** A publisher selects "Make it live" in the console: on the bar "Changes not live yet" of the agent page, or on the Versions page. A publisher is an admin, or a person in the `access.publishers` list of the root `agent.yml`. The dialog lists who can open more records after the change. Ask the person to read that list before they confirm.
 
 Never make a change live yourself. Never save on `main`, and never merge. The only save on `main` is the starter of a project with nothing live (steps 1 and 2).
@@ -144,7 +146,7 @@ An agent that starts on its own (an email, a schedule) acts as the agent: its `d
 | Lint errors | Fix the files, check again. Say: "I found a problem in the change and fixed it." |
 | `run_access_required` (403) | "The agents are saved. They start to work when your organization has access. Do you have an access code?" |
 | `insufficient_ai_credits` (402) | "The AI credits are used up. Add credits on the Billing page of the console." Do not try again. |
-| `forbidden`, or "This action needs the admin role." | Only an admin can do this step. Say: "Only an admin can do this. Ask an admin to do it, or make the change yourself in the Builder of the console." Do not ask for "Can build": it does not help. |
+| `forbidden`, or "This action needs the admin role." | Only an admin can do this step. Say: "Only an admin can do this. Ask an admin to do it, or make the change yourself in the agent settings of the console." Do not ask for "Can build": it does not help. |
 | The save is refused because the change moved | Someone changed the same change in the console. Put your edits on top of their version with `npx -y --package=rakerun -- git pull --rebase origin changes/<slug>`, then save again. When git reports a conflict, run `git rebase --abort`. Tell the person which part changed in both places, and ask which version to keep. |
 
 ## Rules

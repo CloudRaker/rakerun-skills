@@ -286,7 +286,7 @@ Run has three roles. An admin gives **Can build** (role `builder`) in **Settings
 | Can | admin | builder | member |
 | --- | --- | --- | --- |
 | Use Home, Inbox, Conversations, Apps, Outputs and Records | yes | yes | yes |
-| Open the build pages: projects, agent settings, the Builder, code, runs, schemas, front doors | yes | yes | no |
+| Open the build pages: projects, agent settings, code, runs, schemas, front doors | yes | yes | no |
 | Make changes live | yes | only in `access.publishers` | app changes only, in `access.publishers` |
 | Open Settings: Teams, People, Billing | yes | no | no |
 | Open records | the rules of this skill | the rules of this skill | the rules of this skill |
@@ -354,7 +354,7 @@ Intake (_schemas/intake.yml)
   Access through a link stops there. It does not continue to other links.
 ```
 
-- The Builder, the console and the make-live dialog use the same sentences.
+- `rakerun lint --explain`, the console and the make-live dialog use the same sentences.
 - Logged in, the sentences give the team names. Logged out, they give the slugs as words, and the CLI makes no call.
 - Before each deploy that changes `_schemas/`, tell the user the sentences of the record types that changed, word for word. Ask whether they are right.
 
